@@ -1,1 +1,1 @@
-"""Tools package for Playwright MCP server.""" 
+"""Tools package for Playwright MCP server."""

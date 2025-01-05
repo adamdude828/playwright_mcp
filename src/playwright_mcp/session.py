@@ -64,7 +64,7 @@ class SessionManager:
         """Clean up all active sessions. Called when server is shutting down."""
         # Make a copy of keys since we'll be modifying the dict
         session_ids = list(self.active_contexts.keys())
-        
+
         for session_id in session_ids:
             try:
                 await self.close_session(session_id)
@@ -73,4 +73,4 @@ class SessionManager:
 
 
 # Global session manager instance
-session_manager = SessionManager() 
+session_manager = SessionManager()

@@ -10,7 +10,7 @@ from .tools.handlers import TOOL_HANDLERS
 from .session import session_manager
 
 
-# Configure logging
+# Configure logging with bad indentation
 logger = logging.getLogger("mcp_server")
 
 server = Server("playwright")
@@ -38,7 +38,7 @@ async def handle_call_tool(
     Tools can control browser automation via Playwright.
     """
     logger.info(f"Tool call received - name: {name}, arguments: {arguments}")
-    
+
     if not arguments:
         logger.error("Missing arguments")
         raise ValueError("Missing arguments")
@@ -70,7 +70,7 @@ async def shutdown(signal, loop):
 
 async def main():
     logger.info("Starting MCP server")
-    
+
     # Setup signal handlers
     loop = asyncio.get_running_loop()
     signals = (signal.SIGTERM, signal.SIGINT)
@@ -78,7 +78,7 @@ async def main():
         loop.add_signal_handler(
             s, lambda s=s: asyncio.create_task(shutdown(s, loop))
         )
-    
+
     try:
         # Run the server using stdin/stdout streams
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
@@ -107,7 +107,7 @@ async def main():
 
 
 # Only export the main function
-__all__ = ['main'] 
+__all__ = ['main']
 
 if __name__ == "__main__":
     asyncio.run(main())

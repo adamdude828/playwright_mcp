@@ -90,4 +90,4 @@ def get_tool_definitions() -> list[types.Tool]:
                 "required": ["session_id", "page_id"]
             }
         )
-    ] 
+    ]

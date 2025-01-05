@@ -8,10 +8,10 @@ async def test_handle_list_tools():
     """Test that handle_list_tools returns the correct list of tools."""
     # Get tools directly from definitions
     expected_tools = get_tool_definitions()
-    
+
     # Get tools through the handler
     actual_tools = await handle_list_tools()
-    
+
     # Compare tool lists
     assert len(actual_tools) == len(expected_tools)
     for actual, expected in zip(actual_tools, expected_tools):
@@ -28,11 +28,11 @@ def test_main_block_configuration():
     # Check for main block with asyncio.run
     assert 'if __name__ == "__main__":' in content
     assert "asyncio.run(main())" in content
-    
+
     # Verify they appear in the correct order
     main_block_pos = content.find('if __name__ == "__main__":')
     run_pos = content.find("asyncio.run(main())")
     assert main_block_pos < run_pos, "asyncio.run should appear after __main__ check"
-    
+
     # Verify there's a newline at the end of the file
-    assert content.endswith("\n"), "File should end with a newline" 
+    assert content.endswith("\n"), "File should end with a newline"

@@ -8,11 +8,11 @@ async def handle_new_page(arguments: dict) -> list[types.TextContent]:
     logger.info(f"Handling new-page request with args: {arguments}")
     try:
         response = await send_to_manager("new_page", arguments)
-        
+
         if "error" in response:
             logger.error(f"New page failed: {response['error']}")
             raise ValueError(response["error"])
-        
+
         logger.info(f"New page created successfully: {response}")
         return [
             types.TextContent(
@@ -23,4 +23,4 @@ async def handle_new_page(arguments: dict) -> list[types.TextContent]:
     except Exception as e:
         logger.error(f"Error in handle_new_page: {e}")
         logger.error(traceback.format_exc())
-        raise 
+        raise

@@ -12,4 +12,4 @@ TOOL_HANDLERS = {
     "goto": handle_goto,
     "close-browser": handle_close_browser,
     "close-page": handle_close_page
-} 
+}

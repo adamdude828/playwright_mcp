@@ -4,4 +4,4 @@
 __version__ = "0.1.0"
 
 # Expose important items at package level
-__all__ = ['__version__'] 
+__all__ = ['__version__']

@@ -15,13 +15,13 @@ def setup_logging():
     log_dir = "logs"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    
+
     log_file = os.path.join(log_dir, "browser_manager.log")
-    
+
     # Configure logging
     logger = logging.getLogger("browser_manager")
     logger.setLevel(logging.DEBUG)
-    
+
     # File handler with rotation
     handler = logging.handlers.RotatingFileHandler(
         log_file,
@@ -31,7 +31,7 @@ def setup_logging():
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    
+
     return logger
 
 
@@ -57,7 +57,7 @@ class BrowserManager:
         server = await asyncio.start_unix_server(
             self.handle_connection, self._socket_path
         )
-        
+
         logger.info(f"Browser manager listening on {self._socket_path}")
         async with server:
             await server.serve_forever()
@@ -69,12 +69,12 @@ class BrowserManager:
                 data = await reader.readline()
                 if not data:
                     break
-                
+
                 logger.debug(f"Received request: {data.decode()}")
                 request = json.loads(data.decode())
                 response = await self.handle_request(request)
                 logger.debug(f"Sending response: {response}")
-                
+
                 writer.write(json.dumps(response).encode() + b'\n')
                 await writer.drain()
             except Exception as e:
@@ -111,10 +111,10 @@ class BrowserManager:
 
             playwright = await async_playwright().start()
             browser_launcher = getattr(playwright, browser_type)
-            
+
             user_data_dir = tempfile.mkdtemp(prefix='playwright_mcp_')
             logger.debug(f"Using user data dir: {user_data_dir}")
-            
+
             context = await browser_launcher.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 headless=headless,
@@ -122,7 +122,7 @@ class BrowserManager:
                 viewport=None,
                 no_viewport=True
             )
-            
+
             session_id = f"{browser_type}_{id(context)}"
             self.active_playwright[session_id] = playwright
             self.active_contexts[session_id] = context
@@ -181,28 +181,28 @@ class BrowserManager:
         try:
             session_id = args.get("session_id")
             page_id = args.get("page_id")
-            
+
             # Verify session exists
             if session_id not in self.active_contexts:
                 logger.error(f"Invalid session ID: {session_id}")
                 return {"error": "Invalid session ID"}
-            
+
             # Verify page exists
             page = self.active_pages.get(page_id)
             if not page:
                 logger.error(f"Invalid page ID: {page_id}")
                 return {"error": "Invalid page ID"}
-            
+
             # Verify page belongs to the specified session
             if page.context != self.active_contexts[session_id]:
                 logger.error(f"Page {page_id} does not belong to session {session_id}")
                 return {"error": "Page does not belong to specified session"}
-            
+
             # Close the page
             await page.close()
             del self.active_pages[page_id]
             logger.info(f"Closed page: {page_id}")
-            
+
             return {"success": True}
         except Exception as e:
             logger.error(f"Error closing page: {e}")
@@ -251,4 +251,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())
