@@ -1,9 +1,9 @@
-import mcp.types as types
+from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_close_browser(arguments: dict) -> list[types.TextContent]:
+async def handle_close_browser(arguments: dict) -> list[TextContent]:
     """Handle close-browser tool."""
     logger.info(f"Handling close-browser request with args: {arguments}")
     try:
@@ -13,11 +13,11 @@ async def handle_close_browser(arguments: dict) -> list[types.TextContent]:
             logger.error(f"Close browser failed: {response['error']}")
             raise ValueError(response["error"])
 
-        logger.info(f"Browser closed successfully: {response}")
+        logger.info("Browser closed successfully")
         return [
-            types.TextContent(
+            TextContent(
                 type="text",
-                text=f"Browser session {arguments['session_id']} closed and cleaned up"
+                text=f"Browser session {arguments['session_id']} closed successfully"
             )
         ]
     except Exception as e:

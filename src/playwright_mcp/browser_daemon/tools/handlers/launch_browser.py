@@ -1,9 +1,9 @@
-import mcp.types as types
+from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_launch_browser(arguments: dict) -> list[types.TextContent]:
+async def handle_launch_browser(arguments: dict) -> list[TextContent]:
     """Handle launch-browser tool."""
     logger.info(f"Handling launch-browser request with args: {arguments}")
     try:
@@ -15,7 +15,7 @@ async def handle_launch_browser(arguments: dict) -> list[types.TextContent]:
 
         logger.info(f"Browser launched successfully: {response}")
         return [
-            types.TextContent(
+            TextContent(
                 type="text",
                 text=f"Browser launched with session ID: {response['session_id']}"
             )

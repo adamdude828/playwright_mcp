@@ -1,23 +1,23 @@
-import mcp.types as types
+from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_goto(arguments: dict) -> list[types.TextContent]:
+async def handle_goto(arguments: dict) -> list[TextContent]:
     """Handle goto tool."""
     logger.info(f"Handling goto request with args: {arguments}")
     try:
         response = await send_to_manager("goto", arguments)
 
         if "error" in response:
-            logger.error(f"Goto failed: {response['error']}")
+            logger.error(f"Navigation failed: {response['error']}")
             raise ValueError(response["error"])
 
-        logger.info(f"Navigation successful: {response}")
+        logger.info("Navigation successful")
         return [
-            types.TextContent(
+            TextContent(
                 type="text",
-                text=f"Navigated to {arguments['url']}"
+                text=f"Navigated to {arguments['url']} successfully"
             )
         ]
     except Exception as e:

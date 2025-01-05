@@ -1,23 +1,23 @@
-import mcp.types as types
+from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_new_page(arguments: dict) -> list[types.TextContent]:
+async def handle_new_page(arguments: dict) -> list[TextContent]:
     """Handle new-page tool."""
     logger.info(f"Handling new-page request with args: {arguments}")
     try:
         response = await send_to_manager("new_page", arguments)
 
         if "error" in response:
-            logger.error(f"New page failed: {response['error']}")
+            logger.error(f"New page creation failed: {response['error']}")
             raise ValueError(response["error"])
 
-        logger.info(f"New page created successfully: {response}")
+        logger.info("New page created successfully")
         return [
-            types.TextContent(
+            TextContent(
                 type="text",
-                text=f"New page created with ID: {response['page_id']}"
+                text=f"Created new page with ID: {response['page_id']}"
             )
         ]
     except Exception as e:

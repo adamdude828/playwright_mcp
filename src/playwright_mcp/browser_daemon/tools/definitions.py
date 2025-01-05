@@ -1,10 +1,10 @@
-import mcp.types as types
+from mcp.types import Tool
 
 
-def get_tool_definitions() -> list[types.Tool]:
+def get_tool_definitions() -> list[Tool]:
     """Get all tool definitions."""
     return [
-        types.Tool(
+        Tool(
             name="launch-browser",
             description="Launch a new browser instance and return a session ID",
             inputSchema={
@@ -26,7 +26,7 @@ def get_tool_definitions() -> list[types.Tool]:
                 "required": ["browser_type"]
             }
         ),
-        types.Tool(
+        Tool(
             name="new-page",
             description="Create a new page in a browser session",
             inputSchema={
@@ -40,7 +40,7 @@ def get_tool_definitions() -> list[types.Tool]:
                 "required": ["session_id"]
             }
         ),
-        types.Tool(
+        Tool(
             name="goto",
             description="Navigate to a URL in a page",
             inputSchema={
@@ -58,7 +58,7 @@ def get_tool_definitions() -> list[types.Tool]:
                 "required": ["page_id", "url"]
             }
         ),
-        types.Tool(
+        Tool(
             name="close-browser",
             description="Close a browser session and clean up resources",
             inputSchema={
@@ -72,7 +72,7 @@ def get_tool_definitions() -> list[types.Tool]:
                 "required": ["session_id"]
             }
         ),
-        types.Tool(
+        Tool(
             name="close-page",
             description="Close a specific page in a browser session",
             inputSchema={
