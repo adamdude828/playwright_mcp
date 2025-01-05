@@ -1,27 +1,12 @@
 import asyncio
 import json
 import os
-import logging
 import traceback
+from ....utils.logging import setup_logging
 
 
 # Configure logging
-logger = logging.getLogger("mcp_server")
-logger.setLevel(logging.DEBUG)
-
-# Create logs directory if it doesn't exist
-if not os.path.exists("logs"):
-    os.makedirs("logs")
-
-# File handler
-handler = logging.handlers.RotatingFileHandler(
-    "logs/mcp_server.log",
-    maxBytes=10*1024*1024,  # 10MB
-    backupCount=5
-)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger = setup_logging("mcp_server")
 
 
 async def send_to_manager(command: str, args: dict) -> dict:

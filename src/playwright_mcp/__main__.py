@@ -1,14 +1,11 @@
 """Main entry point for the package."""
 import asyncio
-import logging
-from .mcp_server import main
+from .utils.logging import setup_logging
+from .mcp_server.core import main
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logger = setup_logging("playwright_mcp")
 
 
 def run():
@@ -16,9 +13,9 @@ def run():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logging.info("Server stopped by user")
+        logger.info("Server stopped by user")
     except Exception as e:
-        logging.error(f"Server error: {e}")
+        logger.error(f"Server error: {e}")
         raise
 
 

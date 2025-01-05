@@ -21,25 +21,12 @@ jobs:
         uses: snok/install-poetry@v1
         
       - name: Install dependencies
-        run: poetry install
-        
-      - name: Install Playwright browsers
-        run: poetry run playwright install --with-deps
+        run: |
+          poetry install
+          poetry run pip install -e .
         
       - name: Run flake8
         run: poetry run flake8 src tests
-
-      - name: Start Browser Manager
-        run: |
-          poetry run python -m playwright_mcp.browser_manager &
-          echo "Waiting for Browser Manager to start..."
-          sleep 5
-        
-      - name: Start MCP Server
-        run: |
-          poetry run python -m playwright_mcp &
-          echo "Waiting for MCP Server to start..."
-          sleep 5
         
       - name: Run pytest
         run: poetry run pytest 

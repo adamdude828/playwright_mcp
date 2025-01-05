@@ -1,43 +1,23 @@
-"""Core server functionality."""
+"""Core MCP server module."""
 import logging
-import logging.handlers
-import os
+from .server import start_server
 
-from mcp.server import Server
+# Configure logging
+logger = logging.getLogger("mcp_server")
+logger.setLevel(logging.ERROR)
 
-
-def setup_logging():
-    """Set up logging configuration."""
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    log_file = os.path.join(log_dir, "mcp_server.log")
-
-    # Configure logging
-    logger = logging.getLogger("mcp_server")
-    logger.setLevel(logging.DEBUG)
-
-    # File handler with rotation
-    handler = logging.handlers.RotatingFileHandler(
-        log_file,
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
-    )
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    return logger
-
-
-logger = setup_logging()
-server = Server("playwright")
+# Add console handler if not already added
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.ERROR)
+    logger.addHandler(console_handler)
 
 
 async def main():
-    """Start and run the MCP server."""
+    """Start the MCP server."""
     logger.info("Starting MCP server")
-    await server.initialize()
-    logger.info("MCP server initialized, waiting for commands")
-    await server.run() 
+    try:
+        await start_server()
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        raise 

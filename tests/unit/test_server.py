@@ -1,5 +1,5 @@
 import pytest
-from playwright_mcp.mcp_server.server import server, handle_list_tools, handle_call_tool
+from playwright_mcp.mcp_server import server, handle_list_tools, handle_call_tool
 from playwright_mcp.browser_daemon.tools.definitions import get_tool_definitions
 
 
