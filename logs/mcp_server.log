@@ -1,0 +1,499 @@
+2025-01-04 17:59:01,850 - INFO - Starting MCP server
+2025-01-04 17:59:01,852 - INFO - MCP server initialized, waiting for commands
+2025-01-04 17:59:01,853 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 17:59:01,854 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 17:59:01,854 - INFO - Connecting to browser manager at /tmp/playwright_mcp.sock
+2025-01-04 17:59:01,855 - ERROR - Error communicating with browser manager: [Errno 2] No such file or directory
+2025-01-04 17:59:01,857 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers.py", line 35, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+FileNotFoundError: [Errno 2] No such file or directory
+
+2025-01-04 17:59:01,857 - ERROR - Error in handle_launch_browser: [Errno 2] No such file or directory
+2025-01-04 17:59:01,857 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers.py", line 63, in handle_launch_browser
+    response = await send_to_manager("launch", arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers.py", line 35, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+FileNotFoundError: [Errno 2] No such file or directory
+
+2025-01-04 17:59:01,857 - ERROR - Tool call failed - name: launch-browser, error: [Errno 2] No such file or directory
+2025-01-04 17:59:01,858 - INFO - Cleaning up browser sessions
+2025-01-04 17:59:56,901 - INFO - Starting MCP server
+2025-01-04 17:59:56,902 - INFO - MCP server initialized, waiting for commands
+2025-01-04 17:59:56,904 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 17:59:56,904 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 17:59:56,904 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:59:56,904 - DEBUG - Connected to browser manager
+2025-01-04 17:59:56,904 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 17:59:56,904 - DEBUG - Waiting for response...
+2025-01-04 17:59:57,730 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4345437920'}
+2025-01-04 17:59:57,730 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4345437920'}
+2025-01-04 17:59:57,730 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4345437920')]
+2025-01-04 17:59:57,733 - INFO - Cleaning up browser sessions
+2025-01-04 18:00:29,776 - INFO - Starting MCP server
+2025-01-04 18:00:29,777 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:00:29,779 - INFO - Tool call received - name: new-page, arguments: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:00:29,779 - INFO - Handling new-page request with args: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:00:29,779 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:00:29,779 - DEBUG - Connected to browser manager
+2025-01-04 18:00:29,779 - DEBUG - Sending request: {'command': 'new_page', 'args': {'session_id': 'chromium_4345437920'}}
+2025-01-04 18:00:29,779 - DEBUG - Waiting for response...
+2025-01-04 18:00:29,807 - DEBUG - Received response: {'success': True, 'page_id': 'page_4345444880'}
+2025-01-04 18:00:29,807 - INFO - New page created successfully: {'success': True, 'page_id': 'page_4345444880'}
+2025-01-04 18:00:29,807 - INFO - Tool call successful - name: new-page, result: [TextContent(type='text', text='New page created with ID: page_4345444880')]
+2025-01-04 18:00:29,810 - INFO - Cleaning up browser sessions
+2025-01-04 18:00:39,125 - INFO - Starting MCP server
+2025-01-04 18:00:39,127 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:00:39,128 - INFO - Tool call received - name: goto, arguments: {'session_id': 'chromium_4345437920', 'page_id': 'page_4345444880', 'url': 'https://example.com'}
+2025-01-04 18:00:39,128 - INFO - Handling goto request with args: {'session_id': 'chromium_4345437920', 'page_id': 'page_4345444880', 'url': 'https://example.com'}
+2025-01-04 18:00:39,128 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:00:39,129 - DEBUG - Connected to browser manager
+2025-01-04 18:00:39,129 - DEBUG - Sending request: {'command': 'goto', 'args': {'session_id': 'chromium_4345437920', 'page_id': 'page_4345444880', 'url': 'https://example.com'}}
+2025-01-04 18:00:39,129 - DEBUG - Waiting for response...
+2025-01-04 18:00:39,238 - DEBUG - Received response: {'success': True}
+2025-01-04 18:00:39,238 - INFO - Navigation successful: {'success': True}
+2025-01-04 18:00:39,238 - INFO - Tool call successful - name: goto, result: [TextContent(type='text', text='Navigated to https://example.com')]
+2025-01-04 18:00:39,241 - INFO - Cleaning up browser sessions
+2025-01-04 18:01:03,258 - INFO - Starting MCP server
+2025-01-04 18:01:03,259 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:01:03,261 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:01:03,261 - INFO - Handling close-browser request with args: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:01:03,261 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:01:03,261 - DEBUG - Connected to browser manager
+2025-01-04 18:01:03,261 - DEBUG - Sending request: {'command': 'close', 'args': {'session_id': 'chromium_4345437920'}}
+2025-01-04 18:01:03,261 - DEBUG - Waiting for response...
+2025-01-04 18:01:03,360 - DEBUG - Received response: {'success': True}
+2025-01-04 18:01:03,360 - INFO - Browser closed successfully: {'success': True}
+2025-01-04 18:01:03,360 - INFO - Tool call successful - name: close-browser, result: [TextContent(type='text', text='Browser session chromium_4345437920 closed and cleaned up')]
+2025-01-04 18:01:03,363 - INFO - Cleaning up browser sessions
+2025-01-04 18:05:37,929 - INFO - Starting MCP server
+2025-01-04 18:05:37,930 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:05:37,932 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:05:37,932 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:05:37,932 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:05:37,932 - DEBUG - Connected to browser manager
+2025-01-04 18:05:37,932 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:05:37,932 - DEBUG - Waiting for response...
+2025-01-04 18:05:38,936 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:38,936 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:38,936 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4349563904')]
+2025-01-04 18:05:38,938 - INFO - Cleaning up browser sessions
+2025-01-04 18:05:47,759 - INFO - Starting MCP server
+2025-01-04 18:05:47,760 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:05:47,762 - INFO - Tool call received - name: new-page, arguments: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:47,762 - INFO - Handling new-page request with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:47,762 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:05:47,762 - DEBUG - Connected to browser manager
+2025-01-04 18:05:47,762 - DEBUG - Sending request: {'command': 'new_page', 'args': {'session_id': 'chromium_4349563904'}}
+2025-01-04 18:05:47,762 - DEBUG - Waiting for response...
+2025-01-04 18:05:47,777 - DEBUG - Received response: {'success': True, 'page_id': 'page_4349741296'}
+2025-01-04 18:05:47,777 - INFO - New page created successfully: {'success': True, 'page_id': 'page_4349741296'}
+2025-01-04 18:05:47,777 - INFO - Tool call successful - name: new-page, result: [TextContent(type='text', text='New page created with ID: page_4349741296')]
+2025-01-04 18:05:47,779 - INFO - Cleaning up browser sessions
+2025-01-04 18:05:56,530 - INFO - Starting MCP server
+2025-01-04 18:05:56,532 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:05:56,534 - INFO - Tool call received - name: goto, arguments: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296', 'url': 'https://example.com'}
+2025-01-04 18:05:56,534 - INFO - Handling goto request with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296', 'url': 'https://example.com'}
+2025-01-04 18:05:56,534 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:05:56,534 - DEBUG - Connected to browser manager
+2025-01-04 18:05:56,534 - DEBUG - Sending request: {'command': 'goto', 'args': {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296', 'url': 'https://example.com'}}
+2025-01-04 18:05:56,534 - DEBUG - Waiting for response...
+2025-01-04 18:05:56,622 - DEBUG - Received response: {'success': True}
+2025-01-04 18:05:56,622 - INFO - Navigation successful: {'success': True}
+2025-01-04 18:05:56,622 - INFO - Tool call successful - name: goto, result: [TextContent(type='text', text='Navigated to https://example.com')]
+2025-01-04 18:05:56,625 - INFO - Cleaning up browser sessions
+2025-01-04 18:06:06,157 - INFO - Starting MCP server
+2025-01-04 18:06:06,159 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:06:06,160 - INFO - Tool call received - name: new-page, arguments: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:06,160 - INFO - Handling new-page request with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:06,160 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:06:06,160 - DEBUG - Connected to browser manager
+2025-01-04 18:06:06,161 - DEBUG - Sending request: {'command': 'new_page', 'args': {'session_id': 'chromium_4349563904'}}
+2025-01-04 18:06:06,161 - DEBUG - Waiting for response...
+2025-01-04 18:06:06,174 - DEBUG - Received response: {'success': True, 'page_id': 'page_4349559296'}
+2025-01-04 18:06:06,174 - INFO - New page created successfully: {'success': True, 'page_id': 'page_4349559296'}
+2025-01-04 18:06:06,174 - INFO - Tool call successful - name: new-page, result: [TextContent(type='text', text='New page created with ID: page_4349559296')]
+2025-01-04 18:06:06,177 - INFO - Cleaning up browser sessions
+2025-01-04 18:06:14,097 - INFO - Starting MCP server
+2025-01-04 18:06:14,098 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:06:14,100 - INFO - Tool call received - name: goto, arguments: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349559296', 'url': 'https://google.com'}
+2025-01-04 18:06:14,100 - INFO - Handling goto request with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349559296', 'url': 'https://google.com'}
+2025-01-04 18:06:14,100 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:06:14,101 - DEBUG - Connected to browser manager
+2025-01-04 18:06:14,101 - DEBUG - Sending request: {'command': 'goto', 'args': {'session_id': 'chromium_4349563904', 'page_id': 'page_4349559296', 'url': 'https://google.com'}}
+2025-01-04 18:06:14,101 - DEBUG - Waiting for response...
+2025-01-04 18:06:14,918 - DEBUG - Received response: {'success': True}
+2025-01-04 18:06:14,919 - INFO - Navigation successful: {'success': True}
+2025-01-04 18:06:14,919 - INFO - Tool call successful - name: goto, result: [TextContent(type='text', text='Navigated to https://google.com')]
+2025-01-04 18:06:14,921 - INFO - Cleaning up browser sessions
+2025-01-04 18:06:24,351 - INFO - Starting MCP server
+2025-01-04 18:06:24,353 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:06:24,354 - INFO - Tool call received - name: close-page, arguments: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296'}
+2025-01-04 18:06:24,354 - INFO - Handling close-page request with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296'}
+2025-01-04 18:06:24,354 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:06:24,355 - DEBUG - Connected to browser manager
+2025-01-04 18:06:24,355 - DEBUG - Sending request: {'command': 'close_page', 'args': {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296'}}
+2025-01-04 18:06:24,355 - DEBUG - Waiting for response...
+2025-01-04 18:06:24,355 - DEBUG - Received response: {'error': 'Unknown command: close_page'}
+2025-01-04 18:06:24,355 - ERROR - Close page failed: Unknown command: close_page
+2025-01-04 18:06:24,355 - ERROR - Error in handle_close_page: Unknown command: close_page
+2025-01-04 18:06:24,355 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/close_page.py", line 14, in handle_close_page
+    raise ValueError(response["error"])
+ValueError: Unknown command: close_page
+
+2025-01-04 18:06:24,355 - ERROR - Tool call failed - name: close-page, error: Unknown command: close_page
+2025-01-04 18:06:24,356 - INFO - Cleaning up browser sessions
+2025-01-04 18:06:59,504 - INFO - Starting MCP server
+2025-01-04 18:06:59,505 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:06:59,507 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:59,507 - INFO - Handling close-browser request with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:59,507 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:06:59,507 - DEBUG - Connected to browser manager
+2025-01-04 18:06:59,507 - DEBUG - Sending request: {'command': 'close', 'args': {'session_id': 'chromium_4349563904'}}
+2025-01-04 18:06:59,507 - DEBUG - Waiting for response...
+2025-01-04 18:06:59,571 - DEBUG - Received response: {'success': True}
+2025-01-04 18:06:59,571 - INFO - Browser closed successfully: {'success': True}
+2025-01-04 18:06:59,571 - INFO - Tool call successful - name: close-browser, result: [TextContent(type='text', text='Browser session chromium_4349563904 closed and cleaned up')]
+2025-01-04 18:06:59,573 - INFO - Cleaning up browser sessions
+2025-01-04 18:08:25,842 - INFO - Starting MCP server
+2025-01-04 18:08:25,843 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:08:25,845 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:08:25,845 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:08:25,845 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:08:25,845 - DEBUG - Connected to browser manager
+2025-01-04 18:08:25,845 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:08:25,845 - DEBUG - Waiting for response...
+2025-01-04 18:08:26,784 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:26,784 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:26,788 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4409539904')]
+2025-01-04 18:08:26,791 - INFO - Cleaning up browser sessions
+2025-01-04 18:08:35,540 - INFO - Starting MCP server
+2025-01-04 18:08:35,541 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:08:35,543 - INFO - Tool call received - name: new-page, arguments: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:35,543 - INFO - Handling new-page request with args: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:35,543 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:08:35,543 - DEBUG - Connected to browser manager
+2025-01-04 18:08:35,543 - DEBUG - Sending request: {'command': 'new_page', 'args': {'session_id': 'chromium_4409539904'}}
+2025-01-04 18:08:35,543 - DEBUG - Waiting for response...
+2025-01-04 18:08:35,563 - DEBUG - Received response: {'success': True, 'page_id': 'page_4409834912'}
+2025-01-04 18:08:35,563 - INFO - New page created successfully: {'success': True, 'page_id': 'page_4409834912'}
+2025-01-04 18:08:35,564 - INFO - Tool call successful - name: new-page, result: [TextContent(type='text', text='New page created with ID: page_4409834912')]
+2025-01-04 18:08:35,566 - INFO - Cleaning up browser sessions
+2025-01-04 18:08:44,432 - INFO - Starting MCP server
+2025-01-04 18:08:44,433 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:08:44,435 - INFO - Tool call received - name: goto, arguments: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912', 'url': 'https://example.com'}
+2025-01-04 18:08:44,435 - INFO - Handling goto request with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912', 'url': 'https://example.com'}
+2025-01-04 18:08:44,435 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:08:44,435 - DEBUG - Connected to browser manager
+2025-01-04 18:08:44,435 - DEBUG - Sending request: {'command': 'goto', 'args': {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912', 'url': 'https://example.com'}}
+2025-01-04 18:08:44,436 - DEBUG - Waiting for response...
+2025-01-04 18:08:44,522 - DEBUG - Received response: {'success': True}
+2025-01-04 18:08:44,522 - INFO - Navigation successful: {'success': True}
+2025-01-04 18:08:44,522 - INFO - Tool call successful - name: goto, result: [TextContent(type='text', text='Navigated to https://example.com')]
+2025-01-04 18:08:44,525 - INFO - Cleaning up browser sessions
+2025-01-04 18:08:54,327 - INFO - Starting MCP server
+2025-01-04 18:08:54,329 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:08:54,330 - INFO - Tool call received - name: new-page, arguments: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:54,330 - INFO - Handling new-page request with args: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:54,330 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:08:54,331 - DEBUG - Connected to browser manager
+2025-01-04 18:08:54,331 - DEBUG - Sending request: {'command': 'new_page', 'args': {'session_id': 'chromium_4409539904'}}
+2025-01-04 18:08:54,331 - DEBUG - Waiting for response...
+2025-01-04 18:08:54,345 - DEBUG - Received response: {'success': True, 'page_id': 'page_4409828144'}
+2025-01-04 18:08:54,346 - INFO - New page created successfully: {'success': True, 'page_id': 'page_4409828144'}
+2025-01-04 18:08:54,346 - INFO - Tool call successful - name: new-page, result: [TextContent(type='text', text='New page created with ID: page_4409828144')]
+2025-01-04 18:08:54,348 - INFO - Cleaning up browser sessions
+2025-01-04 18:09:04,997 - INFO - Starting MCP server
+2025-01-04 18:09:04,998 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:09:05,000 - INFO - Tool call received - name: goto, arguments: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409828144', 'url': 'https://google.com'}
+2025-01-04 18:09:05,000 - INFO - Handling goto request with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409828144', 'url': 'https://google.com'}
+2025-01-04 18:09:05,000 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:09:05,000 - DEBUG - Connected to browser manager
+2025-01-04 18:09:05,000 - DEBUG - Sending request: {'command': 'goto', 'args': {'session_id': 'chromium_4409539904', 'page_id': 'page_4409828144', 'url': 'https://google.com'}}
+2025-01-04 18:09:05,000 - DEBUG - Waiting for response...
+2025-01-04 18:09:05,720 - DEBUG - Received response: {'success': True}
+2025-01-04 18:09:05,721 - INFO - Navigation successful: {'success': True}
+2025-01-04 18:09:05,721 - INFO - Tool call successful - name: goto, result: [TextContent(type='text', text='Navigated to https://google.com')]
+2025-01-04 18:09:05,723 - INFO - Cleaning up browser sessions
+2025-01-04 18:09:16,203 - INFO - Starting MCP server
+2025-01-04 18:09:16,204 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:09:16,206 - INFO - Tool call received - name: close-page, arguments: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912'}
+2025-01-04 18:09:16,206 - INFO - Handling close-page request with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912'}
+2025-01-04 18:09:16,206 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:09:16,206 - DEBUG - Connected to browser manager
+2025-01-04 18:09:16,206 - DEBUG - Sending request: {'command': 'close_page', 'args': {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912'}}
+2025-01-04 18:09:16,206 - DEBUG - Waiting for response...
+2025-01-04 18:09:16,210 - DEBUG - Received response: {'success': True}
+2025-01-04 18:09:16,210 - INFO - Page closed successfully: {'success': True}
+2025-01-04 18:09:16,211 - INFO - Tool call successful - name: close-page, result: [TextContent(type='text', text='Page page_4409834912 closed')]
+2025-01-04 18:09:16,213 - INFO - Cleaning up browser sessions
+2025-01-04 18:10:06,890 - INFO - Starting MCP server
+2025-01-04 18:10:06,891 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:10:45,318 - INFO - Starting MCP server
+2025-01-04 18:10:45,319 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:10:45,321 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_1'}
+2025-01-04 18:10:45,321 - INFO - Handling close-browser request with args: {'session_id': 'chromium_1'}
+2025-01-04 18:10:45,321 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:10:45,321 - ERROR - Error communicating with browser manager: [Errno 61] Connection refused
+2025-01-04 18:10:45,322 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/utils.py", line 34, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+ConnectionRefusedError: [Errno 61] Connection refused
+
+2025-01-04 18:10:45,322 - ERROR - Error in handle_close_browser: [Errno 61] Connection refused
+2025-01-04 18:10:45,322 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/close_browser.py", line 10, in handle_close_browser
+    response = await send_to_manager("close", arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/utils.py", line 34, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+ConnectionRefusedError: [Errno 61] Connection refused
+
+2025-01-04 18:10:45,322 - ERROR - Tool call failed - name: close-browser, error: [Errno 61] Connection refused
+2025-01-04 18:10:45,323 - INFO - Cleaning up browser sessions
+2025-01-04 18:10:58,565 - INFO - Starting MCP server
+2025-01-04 18:10:58,566 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:10:58,568 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_1'}
+2025-01-04 18:10:58,568 - INFO - Handling close-browser request with args: {'session_id': 'chromium_1'}
+2025-01-04 18:10:58,568 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:10:58,568 - DEBUG - Connected to browser manager
+2025-01-04 18:10:58,568 - DEBUG - Sending request: {'command': 'close', 'args': {'session_id': 'chromium_1'}}
+2025-01-04 18:10:58,568 - DEBUG - Waiting for response...
+2025-01-04 18:10:58,568 - DEBUG - Received response: {'error': 'Invalid session ID'}
+2025-01-04 18:10:58,568 - ERROR - Close browser failed: Invalid session ID
+2025-01-04 18:10:58,568 - ERROR - Error in handle_close_browser: Invalid session ID
+2025-01-04 18:10:58,568 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/close_browser.py", line 14, in handle_close_browser
+    raise ValueError(response["error"])
+ValueError: Invalid session ID
+
+2025-01-04 18:10:58,568 - ERROR - Tool call failed - name: close-browser, error: Invalid session ID
+2025-01-04 18:10:58,570 - INFO - Cleaning up browser sessions
+2025-01-04 18:11:07,738 - INFO - Starting MCP server
+2025-01-04 18:11:07,739 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:11:10,693 - INFO - Starting MCP server
+2025-01-04 18:11:10,695 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:11:10,696 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_1'}
+2025-01-04 18:11:10,696 - INFO - Handling close-browser request with args: {'session_id': 'chromium_1'}
+2025-01-04 18:11:10,696 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:11:10,696 - DEBUG - Connected to browser manager
+2025-01-04 18:11:10,697 - DEBUG - Sending request: {'command': 'close', 'args': {'session_id': 'chromium_1'}}
+2025-01-04 18:11:10,697 - DEBUG - Waiting for response...
+2025-01-04 18:11:10,697 - DEBUG - Received response: {'error': 'Invalid session ID'}
+2025-01-04 18:11:10,697 - ERROR - Close browser failed: Invalid session ID
+2025-01-04 18:11:10,697 - ERROR - Error in handle_close_browser: Invalid session ID
+2025-01-04 18:11:10,697 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/close_browser.py", line 14, in handle_close_browser
+    raise ValueError(response["error"])
+ValueError: Invalid session ID
+
+2025-01-04 18:11:10,697 - ERROR - Tool call failed - name: close-browser, error: Invalid session ID
+2025-01-04 18:11:10,698 - INFO - Cleaning up browser sessions
+2025-01-04 18:11:52,291 - INFO - Starting MCP server
+2025-01-04 18:11:52,293 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:11:52,294 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:11:52,294 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:11:52,294 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:11:52,295 - DEBUG - Connected to browser manager
+2025-01-04 18:11:52,295 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:11:52,295 - DEBUG - Waiting for response...
+2025-01-04 18:11:52,366 - DEBUG - Received response: {'error': 'Connection closed while reading from the driver'}
+2025-01-04 18:11:52,366 - ERROR - Launch browser failed: Connection closed while reading from the driver
+2025-01-04 18:11:52,366 - ERROR - Error in handle_launch_browser: Connection closed while reading from the driver
+2025-01-04 18:11:52,366 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/launch_browser.py", line 14, in handle_launch_browser
+    raise ValueError(response["error"])
+ValueError: Connection closed while reading from the driver
+
+2025-01-04 18:11:52,366 - ERROR - Tool call failed - name: launch-browser, error: Connection closed while reading from the driver
+2025-01-04 18:11:52,368 - INFO - Cleaning up browser sessions
+2025-01-04 18:12:03,931 - INFO - Starting MCP server
+2025-01-04 18:12:03,932 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:12:04,390 - INFO - Starting MCP server
+2025-01-04 18:12:04,391 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:12:04,393 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:12:04,393 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:12:04,393 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:12:04,393 - ERROR - Error communicating with browser manager: [Errno 61] Connection refused
+2025-01-04 18:12:04,394 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/utils.py", line 34, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+ConnectionRefusedError: [Errno 61] Connection refused
+
+2025-01-04 18:12:04,394 - ERROR - Error in handle_launch_browser: [Errno 61] Connection refused
+2025-01-04 18:12:04,394 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/launch_browser.py", line 10, in handle_launch_browser
+    response = await send_to_manager("launch", arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/tools/handlers/utils.py", line 34, in send_to_manager
+    reader, writer = await asyncio.open_unix_connection(socket_path)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/streams.py", line 97, in open_unix_connection
+    transport, _ = await loop.create_unix_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/unix_events.py", line 261, in create_unix_connection
+    await self.sock_connect(sock, path)
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/Users/adamholsinger/.pyenv/versions/3.12.7/lib/python3.12/asyncio/selector_events.py", line 659, in _sock_connect
+    sock.connect(address)
+ConnectionRefusedError: [Errno 61] Connection refused
+
+2025-01-04 18:12:04,394 - ERROR - Tool call failed - name: launch-browser, error: [Errno 61] Connection refused
+2025-01-04 18:12:04,395 - INFO - Cleaning up browser sessions
+2025-01-04 18:12:17,809 - INFO - Starting MCP server
+2025-01-04 18:12:17,810 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:12:17,812 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:12:17,812 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:12:17,812 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:12:17,812 - DEBUG - Connected to browser manager
+2025-01-04 18:12:17,812 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:12:17,812 - DEBUG - Waiting for response...
+2025-01-04 18:12:18,737 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:18,741 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:18,742 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4378960976')]
+2025-01-04 18:12:18,744 - INFO - Cleaning up browser sessions
+2025-01-04 18:12:28,179 - INFO - Starting MCP server
+2025-01-04 18:12:28,180 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:12:28,182 - INFO - Tool call received - name: close-browser, arguments: {'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:28,182 - INFO - Handling close-browser request with args: {'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:28,182 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:12:28,182 - DEBUG - Connected to browser manager
+2025-01-04 18:12:28,182 - DEBUG - Sending request: {'command': 'close', 'args': {'session_id': 'chromium_4378960976'}}
+2025-01-04 18:12:28,182 - DEBUG - Waiting for response...
+2025-01-04 18:12:28,261 - DEBUG - Received response: {'success': True}
+2025-01-04 18:12:28,261 - INFO - Browser closed successfully: {'success': True}
+2025-01-04 18:12:28,261 - INFO - Tool call successful - name: close-browser, result: [TextContent(type='text', text='Browser session chromium_4378960976 closed and cleaned up')]
+2025-01-04 18:12:28,264 - INFO - Cleaning up browser sessions
+2025-01-04 18:14:24,857 - INFO - Starting MCP server
+2025-01-04 18:14:24,858 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:14:28,077 - INFO - Starting MCP server
+2025-01-04 18:14:28,078 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:14:28,080 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:14:28,080 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:14:28,080 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:14:28,080 - DEBUG - Connected to browser manager
+2025-01-04 18:14:28,080 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:14:28,080 - DEBUG - Waiting for response...
+2025-01-04 18:14:29,021 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4429258800'}
+2025-01-04 18:14:29,021 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4429258800'}
+2025-01-04 18:14:29,021 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4429258800')]
+2025-01-04 18:14:29,024 - INFO - Cleaning up browser sessions
+2025-01-04 18:15:11,643 - INFO - Starting MCP server
+2025-01-04 18:15:11,644 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:15:14,877 - INFO - Starting MCP server
+2025-01-04 18:15:14,879 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:15:14,881 - INFO - Tool call received - name: launch-browser, arguments: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:15:14,881 - INFO - Handling launch-browser request with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:15:14,881 - INFO - Connecting to browser manager at /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:15:14,881 - DEBUG - Connected to browser manager
+2025-01-04 18:15:14,881 - DEBUG - Sending request: {'command': 'launch', 'args': {'browser_type': 'chromium', 'headless': False}}
+2025-01-04 18:15:14,881 - DEBUG - Waiting for response...
+2025-01-04 18:15:15,655 - DEBUG - Received response: {'success': True, 'session_id': 'chromium_4367595376'}
+2025-01-04 18:15:15,656 - INFO - Browser launched successfully: {'success': True, 'session_id': 'chromium_4367595376'}
+2025-01-04 18:15:15,659 - INFO - Tool call successful - name: launch-browser, result: [TextContent(type='text', text='Browser launched with session ID: chromium_4367595376')]
+2025-01-04 18:15:15,662 - INFO - Cleaning up browser sessions
+2025-01-04 18:15:44,828 - INFO - Starting MCP server
+2025-01-04 18:15:44,830 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:16:13,769 - INFO - Starting MCP server
+2025-01-04 18:16:13,771 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:16:24,748 - INFO - Starting MCP server
+2025-01-04 18:16:24,750 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:17:48,531 - INFO - Starting MCP server
+2025-01-04 18:17:48,533 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:18:36,401 - INFO - Received exit signal SIGTERM...
+2025-01-04 18:18:36,401 - INFO - Cancelling 4 outstanding tasks
+2025-01-04 18:18:36,401 - INFO - Server shutdown initiated
+2025-01-04 18:18:36,401 - INFO - Cleaning up browser sessions
+2025-01-04 18:18:50,876 - INFO - Starting MCP server
+2025-01-04 18:18:50,877 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:19:13,912 - INFO - Received exit signal SIGTERM...
+2025-01-04 18:19:13,913 - INFO - Cancelling 4 outstanding tasks
+2025-01-04 18:19:13,914 - INFO - Server shutdown initiated
+2025-01-04 18:19:13,914 - INFO - Cleaning up browser sessions
+2025-01-04 18:19:28,827 - INFO - Starting MCP server
+2025-01-04 18:19:28,828 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:19:46,865 - INFO - Cleaning up browser sessions
+2025-01-04 18:20:09,363 - INFO - Starting MCP server
+2025-01-04 18:20:09,365 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:21:35,237 - INFO - Received exit signal SIGTERM...
+2025-01-04 18:21:35,237 - INFO - Cancelling 4 outstanding tasks
+2025-01-04 18:21:35,237 - INFO - Server shutdown initiated
+2025-01-04 18:21:35,237 - INFO - Cleaning up browser sessions
+2025-01-04 18:23:29,049 - INFO - Starting MCP server
+2025-01-04 18:23:29,050 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:23:45,739 - INFO - Received exit signal SIGTERM...
+2025-01-04 18:23:45,739 - INFO - Cancelling 4 outstanding tasks
+2025-01-04 18:23:45,739 - INFO - Server shutdown initiated
+2025-01-04 18:23:45,739 - INFO - Cleaning up browser sessions
+2025-01-04 18:24:47,845 - INFO - Starting MCP server
+2025-01-04 18:24:47,847 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:25:53,621 - INFO - Received exit signal SIGTERM...
+2025-01-04 18:25:53,621 - INFO - Cancelling 4 outstanding tasks
+2025-01-04 18:25:53,622 - INFO - Server shutdown initiated
+2025-01-04 18:25:53,622 - INFO - Cleaning up browser sessions
+2025-01-04 18:49:54,432 - INFO - Starting MCP server
+2025-01-04 18:49:54,433 - INFO - MCP server initialized, waiting for commands
+2025-01-04 18:51:58,925 - INFO - Listing available tools
+2025-01-04 18:51:58,925 - DEBUG - Available tools: ['launch-browser', 'new-page', 'goto', 'close-browser', 'close-page']
+2025-01-04 18:53:43,680 - INFO - Listing available tools
+2025-01-04 18:53:43,680 - DEBUG - Available tools: ['launch-browser', 'new-page', 'goto', 'close-browser', 'close-page']

@@ -1,0 +1,163 @@
+2025-01-04 17:52:03,398 - INFO - Starting browser manager service
+2025-01-04 17:52:03,399 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:52:52,629 - INFO - Starting browser manager service
+2025-01-04 17:52:52,629 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:53:59,305 - INFO - Starting browser manager service
+2025-01-04 17:53:59,305 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:58:54,405 - INFO - Starting browser manager service
+2025-01-04 17:58:54,405 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:59:51,479 - INFO - Starting browser manager service
+2025-01-04 17:59:51,480 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 17:59:56,904 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 17:59:56,904 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 17:59:56,904 - INFO - Launching chromium browser (headless=False)
+2025-01-04 17:59:57,016 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_j7pwnq_c
+2025-01-04 17:59:57,730 - INFO - Browser launched successfully with session ID: chromium_4345437920
+2025-01-04 17:59:57,730 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4345437920'}
+2025-01-04 18:00:29,779 - DEBUG - Received request: {"command": "new_page", "args": {"session_id": "chromium_4345437920"}}
+
+2025-01-04 18:00:29,779 - INFO - Processing command: new_page with args: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:00:29,807 - INFO - Created new page with ID: page_4345444880
+2025-01-04 18:00:29,807 - DEBUG - Sending response: {'success': True, 'page_id': 'page_4345444880'}
+2025-01-04 18:00:39,129 - DEBUG - Received request: {"command": "goto", "args": {"session_id": "chromium_4345437920", "page_id": "page_4345444880", "url": "https://example.com"}}
+
+2025-01-04 18:00:39,129 - INFO - Processing command: goto with args: {'session_id': 'chromium_4345437920', 'page_id': 'page_4345444880', 'url': 'https://example.com'}
+2025-01-04 18:00:39,129 - INFO - Navigating page page_4345444880 to https://example.com
+2025-01-04 18:00:39,238 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:01:03,261 - DEBUG - Received request: {"command": "close", "args": {"session_id": "chromium_4345437920"}}
+
+2025-01-04 18:01:03,261 - INFO - Processing command: close with args: {'session_id': 'chromium_4345437920'}
+2025-01-04 18:01:03,267 - DEBUG - Removed page: page_4345444880
+2025-01-04 18:01:03,360 - INFO - Closed browser session: chromium_4345437920
+2025-01-04 18:01:03,360 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:05:37,932 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:05:37,932 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:05:37,932 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:05:38,058 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_m_vg8w1y
+2025-01-04 18:05:38,934 - INFO - Browser launched successfully with session ID: chromium_4349563904
+2025-01-04 18:05:38,935 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:47,762 - DEBUG - Received request: {"command": "new_page", "args": {"session_id": "chromium_4349563904"}}
+
+2025-01-04 18:05:47,762 - INFO - Processing command: new_page with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:05:47,776 - INFO - Created new page with ID: page_4349741296
+2025-01-04 18:05:47,776 - DEBUG - Sending response: {'success': True, 'page_id': 'page_4349741296'}
+2025-01-04 18:05:56,534 - DEBUG - Received request: {"command": "goto", "args": {"session_id": "chromium_4349563904", "page_id": "page_4349741296", "url": "https://example.com"}}
+
+2025-01-04 18:05:56,534 - INFO - Processing command: goto with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296', 'url': 'https://example.com'}
+2025-01-04 18:05:56,534 - INFO - Navigating page page_4349741296 to https://example.com
+2025-01-04 18:05:56,621 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:06:06,161 - DEBUG - Received request: {"command": "new_page", "args": {"session_id": "chromium_4349563904"}}
+
+2025-01-04 18:06:06,161 - INFO - Processing command: new_page with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:06,174 - INFO - Created new page with ID: page_4349559296
+2025-01-04 18:06:06,174 - DEBUG - Sending response: {'success': True, 'page_id': 'page_4349559296'}
+2025-01-04 18:06:14,101 - DEBUG - Received request: {"command": "goto", "args": {"session_id": "chromium_4349563904", "page_id": "page_4349559296", "url": "https://google.com"}}
+
+2025-01-04 18:06:14,101 - INFO - Processing command: goto with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349559296', 'url': 'https://google.com'}
+2025-01-04 18:06:14,101 - INFO - Navigating page page_4349559296 to https://google.com
+2025-01-04 18:06:14,918 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:06:24,355 - DEBUG - Received request: {"command": "close_page", "args": {"session_id": "chromium_4349563904", "page_id": "page_4349741296"}}
+
+2025-01-04 18:06:24,355 - INFO - Processing command: close_page with args: {'session_id': 'chromium_4349563904', 'page_id': 'page_4349741296'}
+2025-01-04 18:06:24,355 - DEBUG - Sending response: {'error': 'Unknown command: close_page'}
+2025-01-04 18:06:59,507 - DEBUG - Received request: {"command": "close", "args": {"session_id": "chromium_4349563904"}}
+
+2025-01-04 18:06:59,507 - INFO - Processing command: close with args: {'session_id': 'chromium_4349563904'}
+2025-01-04 18:06:59,510 - DEBUG - Removed page: page_4349741296
+2025-01-04 18:06:59,510 - DEBUG - Removed page: page_4349559296
+2025-01-04 18:06:59,571 - INFO - Closed browser session: chromium_4349563904
+2025-01-04 18:06:59,571 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:08:09,219 - INFO - Starting browser manager service
+2025-01-04 18:08:09,220 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:08:25,845 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:08:25,846 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:08:25,846 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:08:25,956 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_34dxlpgk
+2025-01-04 18:08:26,780 - INFO - Browser launched successfully with session ID: chromium_4409539904
+2025-01-04 18:08:26,784 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:35,543 - DEBUG - Received request: {"command": "new_page", "args": {"session_id": "chromium_4409539904"}}
+
+2025-01-04 18:08:35,543 - INFO - Processing command: new_page with args: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:35,562 - INFO - Created new page with ID: page_4409834912
+2025-01-04 18:08:35,563 - DEBUG - Sending response: {'success': True, 'page_id': 'page_4409834912'}
+2025-01-04 18:08:44,436 - DEBUG - Received request: {"command": "goto", "args": {"session_id": "chromium_4409539904", "page_id": "page_4409834912", "url": "https://example.com"}}
+
+2025-01-04 18:08:44,436 - INFO - Processing command: goto with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912', 'url': 'https://example.com'}
+2025-01-04 18:08:44,436 - INFO - Navigating page page_4409834912 to https://example.com
+2025-01-04 18:08:44,522 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:08:54,331 - DEBUG - Received request: {"command": "new_page", "args": {"session_id": "chromium_4409539904"}}
+
+2025-01-04 18:08:54,331 - INFO - Processing command: new_page with args: {'session_id': 'chromium_4409539904'}
+2025-01-04 18:08:54,345 - INFO - Created new page with ID: page_4409828144
+2025-01-04 18:08:54,345 - DEBUG - Sending response: {'success': True, 'page_id': 'page_4409828144'}
+2025-01-04 18:09:05,000 - DEBUG - Received request: {"command": "goto", "args": {"session_id": "chromium_4409539904", "page_id": "page_4409828144", "url": "https://google.com"}}
+
+2025-01-04 18:09:05,000 - INFO - Processing command: goto with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409828144', 'url': 'https://google.com'}
+2025-01-04 18:09:05,000 - INFO - Navigating page page_4409828144 to https://google.com
+2025-01-04 18:09:05,720 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:09:16,206 - DEBUG - Received request: {"command": "close_page", "args": {"session_id": "chromium_4409539904", "page_id": "page_4409834912"}}
+
+2025-01-04 18:09:16,206 - INFO - Processing command: close_page with args: {'session_id': 'chromium_4409539904', 'page_id': 'page_4409834912'}
+2025-01-04 18:09:16,210 - INFO - Closed page: page_4409834912
+2025-01-04 18:09:16,210 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:10:52,784 - INFO - Starting browser manager service
+2025-01-04 18:10:52,784 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:10:58,568 - DEBUG - Received request: {"command": "close", "args": {"session_id": "chromium_1"}}
+
+2025-01-04 18:10:58,568 - INFO - Processing command: close with args: {'session_id': 'chromium_1'}
+2025-01-04 18:10:58,568 - ERROR - Invalid session ID: chromium_1
+2025-01-04 18:10:58,568 - DEBUG - Sending response: {'error': 'Invalid session ID'}
+2025-01-04 18:11:10,697 - DEBUG - Received request: {"command": "close", "args": {"session_id": "chromium_1"}}
+
+2025-01-04 18:11:10,697 - INFO - Processing command: close with args: {'session_id': 'chromium_1'}
+2025-01-04 18:11:10,697 - ERROR - Invalid session ID: chromium_1
+2025-01-04 18:11:10,697 - DEBUG - Sending response: {'error': 'Invalid session ID'}
+2025-01-04 18:11:52,295 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:11:52,295 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:11:52,295 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:11:52,366 - ERROR - Error launching browser: Connection closed while reading from the driver
+2025-01-04 18:11:52,366 - ERROR - Traceback (most recent call last):
+  File "/Users/adamholsinger/production_monitor/playwright_mcp/src/playwright_mcp/browser_manager.py", line 112, in _launch_browser
+    playwright = await async_playwright().start()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/Library/Caches/pypoetry/virtualenvs/playwright-mcp-nGHZkZZu-py3.12/lib/python3.12/site-packages/playwright/async_api/_context_manager.py", line 51, in start
+    return await self.__aenter__()
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adamholsinger/Library/Caches/pypoetry/virtualenvs/playwright-mcp-nGHZkZZu-py3.12/lib/python3.12/site-packages/playwright/async_api/_context_manager.py", line 46, in __aenter__
+    playwright = AsyncPlaywright(next(iter(done)).result())
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+Exception: Connection closed while reading from the driver
+
+2025-01-04 18:11:52,366 - DEBUG - Sending response: {'error': 'Connection closed while reading from the driver'}
+2025-01-04 18:12:11,908 - INFO - Starting browser manager service
+2025-01-04 18:12:11,909 - INFO - Browser manager listening on /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp.sock
+2025-01-04 18:12:17,812 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:12:17,812 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:12:17,812 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:12:17,922 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_x1d8eet3
+2025-01-04 18:12:18,737 - INFO - Browser launched successfully with session ID: chromium_4378960976
+2025-01-04 18:12:18,737 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:28,182 - DEBUG - Received request: {"command": "close", "args": {"session_id": "chromium_4378960976"}}
+
+2025-01-04 18:12:28,182 - INFO - Processing command: close with args: {'session_id': 'chromium_4378960976'}
+2025-01-04 18:12:28,260 - INFO - Closed browser session: chromium_4378960976
+2025-01-04 18:12:28,260 - DEBUG - Sending response: {'success': True}
+2025-01-04 18:14:28,080 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:14:28,080 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:14:28,080 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:14:28,189 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_4x7hetgd
+2025-01-04 18:14:29,019 - INFO - Browser launched successfully with session ID: chromium_4429258800
+2025-01-04 18:14:29,021 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4429258800'}
+2025-01-04 18:15:14,881 - DEBUG - Received request: {"command": "launch", "args": {"browser_type": "chromium", "headless": false}}
+
+2025-01-04 18:15:14,881 - INFO - Processing command: launch with args: {'browser_type': 'chromium', 'headless': False}
+2025-01-04 18:15:14,881 - INFO - Launching chromium browser (headless=False)
+2025-01-04 18:15:14,987 - DEBUG - Using user data dir: /var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T/playwright_mcp_tcgx2hqo
+2025-01-04 18:15:15,654 - INFO - Browser launched successfully with session ID: chromium_4367595376
+2025-01-04 18:15:15,655 - DEBUG - Sending response: {'success': True, 'session_id': 'chromium_4367595376'}

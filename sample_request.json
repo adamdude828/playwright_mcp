@@ -1,0 +1,12 @@
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tool/call",
+    "params": {
+        "name": "launch-browser",
+        "arguments": {
+            "browser_type": "chromium",
+            "headless": true
+        }
+    }
+} 

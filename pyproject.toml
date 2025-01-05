@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "playwright-mcp"
+version = "0.1.0"
+description = "Playwright MCP Server"
+authors = ["Adam Holsinger"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.6"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+pydantic = "^2.10.4"
+playwright = "^1.49.1"
+mcp-python = "^0.1.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.1"
+pytest-cov = "^6.0.0"
+flake8 = "^7.1.1"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=src --cov-report=term-missing"
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203"  # Ignore whitespace before ':' (black compatibility)
+select = ["E", "W", "F"]  # Enable all pycodestyle errors, warnings, and pyflakes
+per-file-ignores = ["__init__.py:F401"]
+# E201: whitespace after '('
+# E202: whitespace before ')'
+# E203: whitespace before ':'
+# E211: whitespace before '('
+# E221: multiple spaces before operator
+# E222: multiple spaces after operator
+# E251: unexpected spaces around keyword / parameter equals
+# E261: at least two spaces before inline comment
+# E262: inline comment should start with '# '
+# E265: block comment should start with '# '
+# E271: multiple spaces after keyword
+# E272: multiple spaces before keyword
+# W291: trailing whitespace
+# W293: blank line contains whitespace
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
