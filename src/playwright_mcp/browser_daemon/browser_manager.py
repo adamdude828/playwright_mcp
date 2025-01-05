@@ -6,36 +6,9 @@ import tempfile
 from typing import Dict
 import os
 import traceback
-import logging
-import logging.handlers
+from ..utils.logging import setup_logging
 
-
-def setup_logging():
-    """Set up logging configuration."""
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    log_file = os.path.join(log_dir, "browser_manager.log")
-
-    # Configure logging
-    logger = logging.getLogger("browser_manager")
-    logger.setLevel(logging.DEBUG)
-
-    # File handler with rotation
-    handler = logging.handlers.RotatingFileHandler(
-        log_file,
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
-    )
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    return logger
-
-
-logger = setup_logging()
+logger = setup_logging("browser_manager")
 
 
 class BrowserManager:
@@ -99,6 +72,8 @@ class BrowserManager:
             return await self._close_browser(args)
         elif command == "close_page":
             return await self._close_page(args)
+        elif command == "analyze_page":
+            return await self._analyze_page(args)
         else:
             return {"error": f"Unknown command: {command}"}
 
@@ -109,12 +84,18 @@ class BrowserManager:
             headless = args.get("headless", True)
             logger.info(f"Launching {browser_type} browser (headless={headless})")
 
+            logger.debug("Creating playwright instance...")
             playwright = await async_playwright().start()
+            logger.debug(f"Got playwright instance: {playwright}")
+            
+            logger.debug(f"Getting browser launcher for type: {browser_type}")
             browser_launcher = getattr(playwright, browser_type)
+            logger.debug(f"Got browser launcher: {browser_launcher}")
 
             user_data_dir = tempfile.mkdtemp(prefix='playwright_mcp_')
             logger.debug(f"Using user data dir: {user_data_dir}")
 
+            logger.debug("Launching persistent context...")
             context = await browser_launcher.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 headless=headless,
@@ -122,16 +103,13 @@ class BrowserManager:
                 viewport=None,
                 no_viewport=True
             )
+            logger.debug(f"Got browser context: {context}")
 
             session_id = f"{browser_type}_{id(context)}"
             self.active_playwright[session_id] = playwright
             self.active_contexts[session_id] = context
 
-            # Create initial page
-            page = await context.new_page()
-            await page.goto('about:blank')
             logger.info(f"Browser launched successfully with session ID: {session_id}")
-
             return {"success": True, "session_id": session_id}
         except Exception as e:
             logger.error(f"Error launching browser: {e}")
@@ -240,6 +218,27 @@ class BrowserManager:
             return {"success": True}
         except Exception as e:
             logger.error(f"Error closing browser: {e}")
+            logger.error(traceback.format_exc())
+            return {"error": str(e)}
+
+    async def _analyze_page(self, args: dict) -> dict:
+        """Analyze the current page and return information about interactive elements."""
+        try:
+            page_id = args.get("page_id")
+            page = self.active_pages.get(page_id)
+            if not page:
+                logger.error(f"Invalid page ID: {page_id}")
+                return {"error": "Invalid page ID"}
+
+            from .tools.page_analyzer import get_page_elements_map
+            elements_map = await get_page_elements_map(page)
+            
+            return {
+                "success": True,
+                "elements": elements_map
+            }
+        except Exception as e:
+            logger.error(f"Error analyzing page: {e}")
             logger.error(traceback.format_exc())
             return {"error": str(e)}
 
