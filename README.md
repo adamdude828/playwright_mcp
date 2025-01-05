@@ -1,3 +1,3 @@
-# Playwright MCP Server
+# Playwright MCP
 
-A Model Context Protocol server for Playwright browser automation. 
+Testing GitHub Actions workflow. 
