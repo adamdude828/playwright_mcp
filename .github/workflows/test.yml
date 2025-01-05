@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -21,13 +21,18 @@ jobs:
         uses: snok/install-poetry@v1
         
       - name: Install dependencies
-        run: poetry install
-        
-      - name: Install Playwright browsers
-        run: poetry run playwright install --with-deps
+        run: |
+          poetry install
+          poetry run pip install -e .
         
       - name: Run flake8
         run: poetry run flake8 src tests
         
       - name: Run pytest
         run: poetry run pytest 
+        
+      - name: Cleanup Services
+        if: always()
+        run: |
+          pkill -f "python -m playwright_mcp" || true
+          pkill -f "playwright_mcp.browser_manager" || true 
