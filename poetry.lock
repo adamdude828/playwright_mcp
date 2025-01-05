@@ -448,20 +448,6 @@ cli = ["python-dotenv (>=1.0.0)", "typer (>=0.12.4)"]
 rich = ["rich (>=13.9.4)"]
 
 [[package]]
-name = "mcp-python"
-version = "0.1.2"
-description = "MCP server providing a Python REPL with persistent session"
-optional = false
-python-versions = ">=3.10"
-files = [
-    {file = "mcp_python-0.1.2-py3-none-any.whl", hash = "sha256:f35331775bc49f960714ef8ec1981533a93fbeccf4252e346247b61dc27e55d1"},
-    {file = "mcp_python-0.1.2.tar.gz", hash = "sha256:d5813b7fa6c2609307b8abc80fd1fefe1609b98938d1f88f930bf69e66b6c1c0"},
-]
-
-[package.dependencies]
-mcp = "*"
-
-[[package]]
 name = "packaging"
 version = "24.2"
 description = "Core utilities for Python packages"
@@ -1128,4 +1114,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2030c3ad88991a91ba61d7d2014cb23bf9ba829306bce49d69d518877da723dc"
+content-hash = "38832813c753233235df6c622ddc640ef5eaab21d5f4d4620acb4dbeff5736fb"

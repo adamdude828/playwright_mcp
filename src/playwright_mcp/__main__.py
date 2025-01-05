@@ -1,7 +1,7 @@
 """Main entry point for the package."""
 import asyncio
 import logging
-from .server import main
+from .mcp_server import main
 
 
 # Configure logging
