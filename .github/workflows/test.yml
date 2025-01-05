@@ -28,6 +28,24 @@ jobs:
         
       - name: Run flake8
         run: poetry run flake8 src tests
+
+      - name: Start Browser Manager
+        run: |
+          poetry run python -m playwright_mcp.browser_manager &
+          echo "Waiting for Browser Manager to start..."
+          sleep 5
+        
+      - name: Start MCP Server
+        run: |
+          poetry run python -m playwright_mcp &
+          echo "Waiting for MCP Server to start..."
+          sleep 5
         
       - name: Run pytest
         run: poetry run pytest 
+        
+      - name: Cleanup Services
+        if: always()
+        run: |
+          pkill -f "python -m playwright_mcp" || true
+          pkill -f "playwright_mcp.browser_manager" || true 
