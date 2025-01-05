@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Playwright MCP Server"
 authors = ["Adam Holsinger"]
 readme = "README.md"
+packages = [
+    { include = "playwright_mcp", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
