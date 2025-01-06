@@ -66,7 +66,7 @@ def test_navigate_without_daemon():
     """Test that trying to navigate without starting the daemon fails with appropriate error."""
     # First ensure daemon is stopped
     subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -75,9 +75,10 @@ def test_navigate_without_daemon():
     
     # Try to navigate without daemon running
     cmd = [
-        'mcp-cli', '--server', 'playwright', 'call-tool',
+        'mcp-cli', '--server', 'playwright',
         '--tool', 'navigate',
-        '--tool-args', '{"url": "https://example.com"}'
+        '--tool-args', '{"url": "https://example.com"}',
+        'call-tool'
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     
@@ -89,7 +90,7 @@ def test_start_daemon():
     """Test that the start-daemon command works successfully."""
     # First ensure daemon is stopped
     subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -97,7 +98,7 @@ def test_start_daemon():
     
     # Start the daemon
     result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'start-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'start-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -112,7 +113,7 @@ def test_stop_daemon_when_not_running():
     """Test that stop-daemon succeeds even when daemon isn't running."""
     # First ensure daemon is stopped
     subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -120,7 +121,7 @@ def test_stop_daemon_when_not_running():
     
     # Try to stop it again
     result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -135,7 +136,7 @@ def test_start_navigate_stop_cycle():
     """Test a full cycle of starting daemon, navigating to a page, and stopping."""
     # First ensure daemon is stopped
     subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -143,7 +144,7 @@ def test_start_navigate_stop_cycle():
     
     # Start the daemon
     start_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'start-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'start-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
@@ -153,8 +154,10 @@ def test_start_navigate_stop_cycle():
     
     # Navigate to a page
     nav_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'navigate',
-         '--tool-args', '{"url": "https://example.com"}'],
+        ['mcp-cli', '--server', 'playwright',
+         '--tool', 'navigate',
+         '--tool-args', '{"url": "https://example.com"}',
+         'call-tool'],
         capture_output=True,
         text=True
     )
@@ -163,7 +166,7 @@ def test_start_navigate_stop_cycle():
     
     # Stop the daemon
     stop_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon'],
+        ['mcp-cli', '--server', 'playwright', '--tool', 'stop-daemon', 'call-tool'],
         capture_output=True,
         text=True
     )
