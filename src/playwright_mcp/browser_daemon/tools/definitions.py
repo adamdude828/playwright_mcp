@@ -5,57 +5,77 @@ def get_tool_definitions() -> list[Tool]:
     """Get all tool definitions."""
     return [
         Tool(
-            name="launch-browser",
-            description="Launch a new browser instance and return a session ID",
+            name="start-daemon",
+            description="Start the browser daemon if it's not already running",
             inputSchema={
                 "type": "object",
-                "properties": {
-                    "browser_type": {
-                        "type": "string",
-                        "description": (
-                            "Type of browser to launch (chromium, firefox, or webkit)"
-                        ),
-                        "enum": ["chromium", "firefox", "webkit"]
-                    },
-                    "headless": {
-                        "type": "boolean",
-                        "description": "Whether to run browser in headless mode",
-                        "default": True
-                    }
-                },
-                "required": ["browser_type"]
+                "properties": {},
+                "additionalProperties": False
             }
         ),
         Tool(
-            name="new-page",
-            description="Create a new page in a browser session",
+            name="stop-daemon",
+            description="Stop the browser daemon if it's running",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False
+            }
+        ),
+        Tool(
+            name="navigate",
+            description=(
+                "Navigate to a URL, optionally reusing an existing browser session "
+                "or page"
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "URL to navigate to"
+                    },
+                    "session_id": {
+                        "type": "string",
+                        "description": (
+                            "Optional browser session ID to reuse. If not provided, "
+                            "a new session will be created."
+                        )
+                    },
+                    "page_id": {
+                        "type": "string",
+                        "description": (
+                            "Optional page ID to reuse. If not provided, "
+                            "a new page will be created."
+                        )
+                    },
+                    "browser_type": {
+                        "type": "string",
+                        "description": "Type of browser to launch if creating new session",
+                        "enum": ["chromium", "firefox", "webkit"],
+                        "default": "chromium"
+                    },
+                    "headless": {
+                        "type": "boolean",
+                        "description": "Whether to run browser in headless mode if creating new session",
+                        "default": True
+                    }
+                },
+                "required": ["url"]
+            }
+        ),
+        Tool(
+            name="new-tab",
+            description="Open a new tab in an existing browser session",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "session_id": {
                         "type": "string",
-                        "description": "Browser session ID from launch-browser"
+                        "description": "Browser session ID to open the tab in"
                     }
                 },
                 "required": ["session_id"]
-            }
-        ),
-        Tool(
-            name="goto",
-            description="Navigate to a URL in a page",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "page_id": {
-                        "type": "string",
-                        "description": "Page ID from new-page"
-                    },
-                    "url": {
-                        "type": "string",
-                        "description": "URL to navigate to"
-                    }
-                },
-                "required": ["page_id", "url"]
             }
         ),
         Tool(
@@ -87,18 +107,18 @@ def get_tool_definitions() -> list[Tool]:
             }
         ),
         Tool(
-            name="close-page",
-            description="Close a specific page in a browser session",
+            name="close-tab",
+            description="Close a specific tab in a browser session",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "session_id": {
                         "type": "string",
-                        "description": "Browser session ID containing the page"
+                        "description": "Browser session ID containing the tab"
                     },
                     "page_id": {
                         "type": "string",
-                        "description": "Page ID to close"
+                        "description": "Tab ID to close"
                     }
                 },
                 "required": ["session_id", "page_id"]

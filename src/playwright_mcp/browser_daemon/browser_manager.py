@@ -1,22 +1,79 @@
 import asyncio
-import json
 from asyncio import StreamReader, StreamWriter
-from playwright.async_api import async_playwright, BrowserContext, Page, Playwright
+from playwright.async_api import async_playwright, BrowserContext, Page
 import tempfile
 from typing import Dict
 import os
-import traceback
-from ..utils.logging import setup_logging
+import logging
+import logging.handlers
+import json
+
+
+def setup_logging(logger_name: str) -> logging.Logger:
+    """Set up logging configuration."""
+    # Create logs directory if it doesn't exist
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # Get or create logger
+    logger = logging.getLogger(logger_name)
+    
+    # Set level based on environment variable
+    level = os.getenv("LOG_LEVEL", "ERROR")
+    level = getattr(logging, level.upper())
+    logger.setLevel(level)
+    
+    # Avoid duplicate handlers
+    if not logger.handlers:
+        # File handler with rotation
+        file_handler = logging.handlers.RotatingFileHandler(
+            os.path.join(log_dir, f"{logger_name}.log"),
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=5
+        )
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        )
+        logger.addHandler(file_handler)
+
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        )
+        logger.addHandler(console_handler)
+
+    return logger
+
 
 logger = setup_logging("browser_manager")
 
 
 class BrowserManager:
     def __init__(self):
-        self.active_playwright: Dict[str, Playwright] = {}
-        self.active_contexts: Dict[str, BrowserContext] = {}
+        self.sessions: Dict[str, BrowserContext] = {}
         self.active_pages: Dict[str, Page] = {}
+        self.playwright = None
+        self._shutdown_task = None
         self._socket_path = os.path.join(tempfile.gettempdir(), 'playwright_mcp.sock')
+        self.SHUTDOWN_DELAY = int(os.getenv('PLAYWRIGHT_MCP_SHUTDOWN_DELAY', 3600))  # Default 1 hour
+        self._last_activity = asyncio.get_event_loop().time()
+
+    async def _check_auto_shutdown(self):
+        """Check if we should shut down due to inactivity."""
+        while True:
+            await asyncio.sleep(60)  # Check every minute
+            current_time = asyncio.get_event_loop().time()
+            
+            if not self.sessions and (current_time - self._last_activity) > self.SHUTDOWN_DELAY:
+                logger.info("No active browser sessions for over an hour, initiating shutdown...")
+                await self.shutdown()
+                break
+
+    async def _update_activity(self):
+        """Update the last activity timestamp."""
+        self._last_activity = asyncio.get_event_loop().time()
 
     async def start_server(self):
         """Start the browser manager server."""
@@ -37,210 +94,150 @@ class BrowserManager:
 
     async def handle_connection(self, reader: StreamReader, writer: StreamWriter):
         """Handle a connection from the MCP server."""
-        while True:
-            try:
-                data = await reader.readline()
-                if not data:
-                    break
-
-                logger.debug(f"Received request: {data.decode()}")
-                request = json.loads(data.decode())
-                response = await self.handle_request(request)
-                logger.debug(f"Sending response: {response}")
-
-                writer.write(json.dumps(response).encode() + b'\n')
-                await writer.drain()
-            except Exception as e:
-                logger.error(f"Error handling request: {e}")
-                logger.error(traceback.format_exc())
-                writer.write(json.dumps({"error": str(e)}).encode() + b'\n')
-                await writer.drain()
-
-    async def handle_request(self, request: dict) -> dict:
-        """Handle a request from the MCP server."""
-        command = request.get("command")
-        args = request.get("args", {})
-        logger.info(f"Processing command: {command} with args: {args}")
-
-        if command == "launch":
-            return await self._launch_browser(args)
-        elif command == "new_page":
-            return await self._new_page(args)
-        elif command == "goto":
-            return await self._goto(args)
-        elif command == "close":
-            return await self._close_browser(args)
-        elif command == "close_page":
-            return await self._close_page(args)
-        elif command == "analyze_page":
-            return await self._analyze_page(args)
-        else:
-            return {"error": f"Unknown command: {command}"}
-
-    async def _launch_browser(self, args: dict) -> dict:
-        """Launch a new browser instance."""
         try:
-            browser_type = args.get("browser_type")
-            headless = args.get("headless", True)
-            logger.info(f"Launching {browser_type} browser (headless={headless})")
+            data = await reader.readline()
+            if not data:
+                return
 
-            logger.debug("Creating playwright instance...")
-            playwright = await async_playwright().start()
-            logger.debug(f"Got playwright instance: {playwright}")
+            request = json.loads(data.decode())
+            logger.debug(f"Received request: {request}")
             
-            logger.debug(f"Getting browser launcher for type: {browser_type}")
-            browser_launcher = getattr(playwright, browser_type)
-            logger.debug(f"Got browser launcher: {browser_launcher}")
-
-            user_data_dir = tempfile.mkdtemp(prefix='playwright_mcp_')
-            logger.debug(f"Using user data dir: {user_data_dir}")
-
-            logger.debug("Launching persistent context...")
-            context = await browser_launcher.launch_persistent_context(
-                user_data_dir=user_data_dir,
-                headless=headless,
-                args=['--no-sandbox', '--start-maximized'],
-                viewport=None,
-                no_viewport=True
-            )
-            logger.debug(f"Got browser context: {context}")
-
-            session_id = f"{browser_type}_{id(context)}"
-            self.active_playwright[session_id] = playwright
-            self.active_contexts[session_id] = context
-
-            logger.info(f"Browser launched successfully with session ID: {session_id}")
-            return {"success": True, "session_id": session_id}
-        except Exception as e:
-            logger.error(f"Error launching browser: {e}")
-            logger.error(traceback.format_exc())
-            return {"error": str(e)}
-
-    async def _new_page(self, args: dict) -> dict:
-        """Create a new page in a browser session."""
-        try:
-            session_id = args.get("session_id")
-            context = self.active_contexts.get(session_id)
-            if not context:
-                logger.error(f"Invalid session ID: {session_id}")
-                return {"error": "Invalid session ID"}
-
-            page = await context.new_page()
-            page_id = f"page_{id(page)}"
-            self.active_pages[page_id] = page
-            logger.info(f"Created new page with ID: {page_id}")
-
-            return {"success": True, "page_id": page_id}
-        except Exception as e:
-            logger.error(f"Error creating new page: {e}")
-            logger.error(traceback.format_exc())
-            return {"error": str(e)}
-
-    async def _goto(self, args: dict) -> dict:
-        """Navigate to a URL in a page."""
-        try:
-            page_id = args.get("page_id")
-            url = args.get("url")
-            page = self.active_pages.get(page_id)
-            if not page:
-                logger.error(f"Invalid page ID: {page_id}")
-                return {"error": "Invalid page ID"}
-
-            logger.info(f"Navigating page {page_id} to {url}")
-            await page.goto(url)
-            return {"success": True}
-        except Exception as e:
-            logger.error(f"Error navigating to URL: {e}")
-            logger.error(traceback.format_exc())
-            return {"error": str(e)}
-
-    async def _close_page(self, args: dict) -> dict:
-        """Close a specific page in a browser session."""
-        try:
-            session_id = args.get("session_id")
-            page_id = args.get("page_id")
-
-            # Verify session exists
-            if session_id not in self.active_contexts:
-                logger.error(f"Invalid session ID: {session_id}")
-                return {"error": "Invalid session ID"}
-
-            # Verify page exists
-            page = self.active_pages.get(page_id)
-            if not page:
-                logger.error(f"Invalid page ID: {page_id}")
-                return {"error": "Invalid page ID"}
-
-            # Verify page belongs to the specified session
-            if page.context != self.active_contexts[session_id]:
-                logger.error(f"Page {page_id} does not belong to session {session_id}")
-                return {"error": "Page does not belong to specified session"}
-
-            # Close the page
-            await page.close()
-            del self.active_pages[page_id]
-            logger.info(f"Closed page: {page_id}")
-
-            return {"success": True}
-        except Exception as e:
-            logger.error(f"Error closing page: {e}")
-            logger.error(traceback.format_exc())
-            return {"error": str(e)}
-
-    async def _close_browser(self, args: dict) -> dict:
-        """Close a browser session."""
-        try:
-            session_id = args.get("session_id")
-            context = self.active_contexts.get(session_id)
-            playwright = self.active_playwright.get(session_id)
-            if not context or not playwright:
-                logger.error(f"Invalid session ID: {session_id}")
-                return {"error": "Invalid session ID"}
-
-            # Close all pages associated with this context
-            pages_to_remove = []
-            for page_id, page in self.active_pages.items():
-                if page.context == context:
+            command = request.get("command")
+            args = request.get("args", {})
+            
+            if command == "navigate":
+                response = await self.handle_navigate(args)
+            elif command == "ping":
+                response = {"status": "pong"}
+            elif command == "new-tab":
+                session_id = args.get("session_id")
+                if session_id not in self.sessions:
+                    response = {"error": "invalid session id"}
+                else:
+                    browser = self.sessions[session_id]
+                    page = await browser.new_page()
+                    page_id = f"page_{id(page)}"
+                    self.active_pages[page_id] = page
+                    response = {"page_id": page_id}
+            elif command == "close-browser":
+                session_id = args.get("session_id")
+                success = await self.close_browser(session_id)
+                response = {"success": success}
+            elif command == "close-tab":
+                page_id = args.get("page_id")
+                if page_id not in self.active_pages:
+                    response = {"error": "invalid page id"}
+                else:
+                    page = self.active_pages[page_id]
                     await page.close()
-                    pages_to_remove.append(page_id)
-
-            for page_id in pages_to_remove:
-                del self.active_pages[page_id]
-                logger.debug(f"Removed page: {page_id}")
-
-            await context.close()
-            await playwright.stop()
-
-            del self.active_contexts[session_id]
-            del self.active_playwright[session_id]
-            logger.info(f"Closed browser session: {session_id}")
-
-            return {"success": True}
+                    del self.active_pages[page_id]
+                    response = {"success": True}
+            else:
+                response = {"error": "unknown command"}
+            
+            writer.write(json.dumps(response).encode() + b"\n")
+            await writer.drain()
         except Exception as e:
-            logger.error(f"Error closing browser: {e}")
-            logger.error(traceback.format_exc())
-            return {"error": str(e)}
+            logger.error(f"Error handling connection: {e}")
+            writer.write(json.dumps({"error": str(e)}).encode() + b"\n")
+            await writer.drain()
+        finally:
+            writer.close()
+            await writer.wait_closed()
 
-    async def _analyze_page(self, args: dict) -> dict:
-        """Analyze the current page and return information about interactive elements."""
+    async def handle_navigate(self, args: dict) -> dict:
+        """Handle navigate command by combining launch, new page, and goto functionality."""
+        await self._update_activity()
+        
         try:
-            page_id = args.get("page_id")
-            page = self.active_pages.get(page_id)
-            if not page:
-                logger.error(f"Invalid page ID: {page_id}")
-                return {"error": "Invalid page ID"}
+            # Get or create browser session
+            session_id = args.get("session_id")
+            created_session = False
+            if not session_id or session_id not in self.sessions:
+                browser_type = args.get("browser_type", "chromium")
+                headless = args.get("headless", True)
+                session_id = await self.launch_browser(browser_type, headless)
+                created_session = True
 
-            from .tools.page_analyzer import get_page_elements_map
-            elements_map = await get_page_elements_map(page)
+            browser = self.sessions[session_id]
+            
+            # Get or create page
+            page_id = args.get("page_id")
+            created_page = False
+            if not page_id or page_id not in self.active_pages:
+                page = await browser.new_page()
+                page_id = f"page_{id(page)}"
+                self.active_pages[page_id] = page
+                created_page = True
+            
+            page = self.active_pages[page_id]
+            
+            # Navigate to URL
+            await page.goto(args["url"])
             
             return {
-                "success": True,
-                "elements": elements_map
+                "session_id": session_id,
+                "page_id": page_id,
+                "created_session": created_session,
+                "created_page": created_page
             }
         except Exception as e:
-            logger.error(f"Error analyzing page: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Navigation failed: {e}")
             return {"error": str(e)}
+
+    async def launch_browser(self, browser_type: str, headless: bool = True) -> str:
+        """Launch a browser and return its session ID."""
+        await self._update_activity()
+        if not self.playwright:
+            self.playwright = await async_playwright().start()
+        
+        browser_class = getattr(self.playwright, browser_type)
+        browser = await browser_class.launch(headless=headless)
+        session_id = f"{browser_type}_{id(browser)}"
+        self.sessions[session_id] = browser
+
+        # Start shutdown checker if it's not running
+        if not self._shutdown_task or self._shutdown_task.done():
+            self._shutdown_task = asyncio.create_task(self._check_auto_shutdown())
+
+        return session_id
+
+    async def close_browser(self, session_id: str) -> bool:
+        """Close a browser session."""
+        if session_id in self.sessions:
+            browser = self.sessions[session_id]
+            
+            # Close all pages associated with this browser
+            pages_to_remove = []
+            for page_id, page in self.active_pages.items():
+                if page.context == browser:
+                    await page.close()
+                    pages_to_remove.append(page_id)
+            
+            for page_id in pages_to_remove:
+                del self.active_pages[page_id]
+            
+            await browser.close()
+            del self.sessions[session_id]
+            return True
+        return False
+
+    async def shutdown(self):
+        """Shutdown the browser manager and cleanup resources."""
+        logger.info("Shutting down browser manager...")
+        for session_id in list(self.sessions.keys()):
+            await self.close_browser(session_id)
+        
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+
+        # Remove the socket file
+        if os.path.exists(self._socket_path):
+            os.unlink(self._socket_path)
+
+        # Exit the process
+        os._exit(0)
 
 
 async def main():

@@ -1,3 +1,6 @@
+IMPORTANT: Do not modify /Users/adamholsinger/.mcp-cli/server_config.json as it maintains
+the consistent entry point for MCP CLI tools and their configurations.
+
 You have the following cli tools. 
 
 mcp-cli:

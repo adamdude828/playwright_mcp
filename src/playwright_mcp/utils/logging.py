@@ -4,15 +4,17 @@ import logging.handlers
 import os
 
 
-def setup_logging(logger_name: str, level: str = "ERROR") -> logging.Logger:
+def setup_logging(logger_name: str) -> logging.Logger:
     """Set up logging configuration.
     
     Args:
         logger_name: Name of the logger
-        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         
     Returns:
         Configured logger instance
+        
+    The logging level is controlled by the LOG_LEVEL environment variable.
+    Defaults to ERROR if not set.
     """
     # Create logs directory if it doesn't exist
     log_dir = "logs"
@@ -22,7 +24,8 @@ def setup_logging(logger_name: str, level: str = "ERROR") -> logging.Logger:
     # Get or create logger
     logger = logging.getLogger(logger_name)
     
-    # Set level based on parameter
+    # Set level based on environment variable
+    level = os.getenv("LOG_LEVEL", "ERROR")
     level = getattr(logging, level.upper())
     logger.setLevel(level)
     

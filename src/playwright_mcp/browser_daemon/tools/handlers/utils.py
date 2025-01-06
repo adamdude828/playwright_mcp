@@ -1,7 +1,8 @@
 import asyncio
 import json
 import os
-import traceback
+import subprocess
+import sys
 from ....utils.logging import setup_logging
 
 
@@ -9,11 +10,51 @@ from ....utils.logging import setup_logging
 logger = setup_logging("mcp_server")
 
 
+async def check_daemon_running() -> bool:
+    """Check if the browser daemon is running by attempting to ping it."""
+    socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
+    logger.debug(f"Checking if daemon is running at socket: {socket_path}")
+    
+    # First check if the socket file exists
+    if not os.path.exists(socket_path):
+        logger.debug("Socket file does not exist")
+        return False
+        
+    try:
+        logger.debug("Socket exists, attempting to connect...")
+        reader, writer = await asyncio.open_unix_connection(socket_path)
+        writer.write(json.dumps({"command": "ping"}).encode() + b'\n')
+        await writer.drain()
+        
+        response = await reader.readline()
+        writer.close()
+        await writer.wait_closed()
+        
+        response_data = json.loads(response.decode())
+        is_running = response_data.get("result") == "pong"
+        logger.debug(f"Daemon running check result: {is_running}")
+        return is_running
+    except (OSError, asyncio.TimeoutError, json.JSONDecodeError) as e:
+        logger.debug(f"Error checking if daemon running: {e}")
+        return False
+
+
+async def start_daemon() -> None:
+    """Start the browser daemon if it's not running."""
+    logger.info("Starting browser daemon...")
+    
+    # Run the daemon module directly in background
+    cmd = f"nohup {sys.executable} -m playwright_mcp.browser_daemon.browser_manager > daemon.log 2>&1 &"
+    logger.debug(f"Running command: {cmd}")
+    subprocess.Popen(cmd, shell=True)
+    
+    logger.info("Daemon start command issued")
+
+
 async def send_to_manager(command: str, args: dict) -> dict:
     """Send a command to the browser manager service."""
-    default_tmp = '/var/folders/h4/mjtjzn8s3d70dkt5y8ym2mp00000gn/T'
-    socket_path = os.path.join(os.getenv('TMPDIR', default_tmp), 'playwright_mcp.sock')
-    logger.info(f"Connecting to browser manager at {socket_path}")
+    socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
+    logger.info(f"Attempting to connect to browser manager at {socket_path}")
 
     try:
         reader, writer = await asyncio.open_unix_connection(socket_path)
@@ -33,8 +74,12 @@ async def send_to_manager(command: str, args: dict) -> dict:
 
         writer.close()
         await writer.wait_closed()
+        
+        if "error" in response_data:
+            raise ValueError(response_data["error"])
+            
         return response_data
+    except (ConnectionRefusedError, FileNotFoundError):
+        raise Exception("Browser daemon is not running. Please call the 'start-daemon' tool first.")
     except Exception as e:
-        logger.error(f"Error communicating with browser manager: {e}")
-        logger.error(traceback.format_exc())
-        raise
+        raise Exception(str(e))
