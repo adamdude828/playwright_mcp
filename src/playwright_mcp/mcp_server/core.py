@@ -1,16 +1,9 @@
 """Core MCP server module."""
-import logging
+from ..utils.logging import setup_logging
 from .server import start_server
 
 # Configure logging
-logger = logging.getLogger("mcp_server")
-logger.setLevel(logging.ERROR)
-
-# Add console handler if not already added
-if not logger.handlers:
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.ERROR)
-    logger.addHandler(console_handler)
+logger = setup_logging("mcp_server")
 
 
 async def main():

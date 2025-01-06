@@ -1,0 +1,327 @@
+{
+  "anchors": [
+    {
+      "type": "a",
+      "classes": ["MV3Tnb"],
+      "id": null,
+      "testId": null,
+      "selector": "div.L3eUgb > div.o3j99.n1xJcf.Ne6nSd > a.MV3Tnb",
+      "text": "About",
+      "name": null,
+      "value": null,
+      "href": "https://about.google/?fg=1&utm_source=google-US&utm_medium=referral&utm_campaign=hp-header"
+    },
+    {
+      "type": "a",
+      "classes": ["MV3Tnb"],
+      "id": null,
+      "testId": null,
+      "selector": "div.L3eUgb > div.o3j99.n1xJcf.Ne6nSd > a.MV3Tnb",
+      "text": "Store",
+      "name": null,
+      "value": null,
+      "href": "https://store.google.com/US?utm_source=hp_header&utm_medium=google_ooo&utm_campaign=GS100042&hl=en-US"
+    },
+    {
+      "type": "a",
+      "classes": ["gb_W"],
+      "id": null,
+      "testId": null,
+      "selector": "div.gb_L.gb_Z.gb_Nf.gb_Uf > div.gb_X.gb_Z > a.gb_W",
+      "text": "Gmail",
+      "name": null,
+      "value": null,
+      "href": "https://mail.google.com/mail/&ogbl"
+    },
+    {
+      "type": "a",
+      "classes": ["gb_W"],
+      "id": null,
+      "testId": null,
+      "selector": "div.gb_L.gb_Z.gb_Nf.gb_Uf > div.gb_X.gb_Z > a.gb_W",
+      "text": "Images",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/imghp?hl=en&ogbl"
+    },
+    {
+      "type": "a",
+      "classes": ["gb_A"],
+      "id": null,
+      "testId": null,
+      "selector": "div.gb_I.gb_bd.gb_Z > div.gb_C > a.gb_A",
+      "text": "",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/intl/en/about/products"
+    },
+    {
+      "type": "a",
+      "classes": ["gb_Ta", "gb_yd", "gb_pd", "gb_gd"],
+      "id": null,
+      "testId": null,
+      "selector": "div.gb_Bd.gb_Zd.gb_wd > div.gb_Re > a.gb_Ta.gb_yd.gb_pd.gb_gd",
+      "text": "Sign in",
+      "name": null,
+      "value": null,
+      "href": "https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=https://www.google.com/&ec=GAZAmgQ"
+    },
+    {
+      "type": "a",
+      "classes": ["m5Qfy"],
+      "id": null,
+      "testId": null,
+      "selector": "promo-middle-slot > div.hob1Ic > a.m5Qfy",
+      "text": "NFL Sunday Ticket",
+      "name": null,
+      "value": null,
+      "href": ""
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.AghGtd > a.pHiOh",
+      "text": "Advertising",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/intl/en_us/ads/?subid=ww-ww-et-g-awa-a-g_hpafoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpafooter&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.AghGtd > a.pHiOh",
+      "text": "Business",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/services/?subid=ww-ww-et-g-awa-a-g_hpbfoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpbfooter&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.AghGtd > a.pHiOh",
+      "text": "How Search works",
+      "name": null,
+      "value": null,
+      "href": "https://google.com/search/howsearchworks/?fg=1"
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.ssOUyb > a.pHiOh",
+      "text": "Our third decade of climate action: join us",
+      "name": null,
+      "value": null,
+      "href": "https://sustainability.google/?utm_source=googlehpfooter&utm_medium=housepromos&utm_campaign=bottom-footer&utm_content="
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.iTjxkf > a.pHiOh",
+      "text": "Privacy",
+      "name": null,
+      "value": null,
+      "href": "https://policies.google.com/privacy?hl=en&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": ["pHiOh"],
+      "id": null,
+      "testId": null,
+      "selector": "div.KxwPGc.SSwjIe > div.KxwPGc.iTjxkf > a.pHiOh",
+      "text": "Terms",
+      "name": null,
+      "value": null,
+      "href": "https://policies.google.com/terms?hl=en&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "g-menu-item.EpPYLd.GZnQqe > div.YpcDnf.OSrXXb.HG1dvd > a",
+      "text": "Search settings",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/preferences?hl=en&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "g-menu-item.EpPYLd.GZnQqe > div.YpcDnf.OSrXXb.HG1dvd > a",
+      "text": "Advanced search",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/advanced_search?hl=en&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "g-menu-item.EpPYLd.GZnQqe > div.YpcDnf.OSrXXb.HG1dvd > a",
+      "text": "Your data in Search",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/history/privacyadvisor/search/unauth?utm_source=googlemenu&fg=1&cctld=com"
+    },
+    {
+      "type": "a",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "g-menu-item.EpPYLd.GZnQqe > div.YpcDnf.OSrXXb.HG1dvd > a",
+      "text": "Search history",
+      "name": null,
+      "value": null,
+      "href": "https://www.google.com/history/optout?hl=en&fg=1"
+    },
+    {
+      "type": "a",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "g-menu-item.EpPYLd.GZnQqe > div.YpcDnf.OSrXXb.HG1dvd > a",
+      "text": "Search help",
+      "name": null,
+      "value": null,
+      "href": "https://support.google.com/websearch/?p=ws_results_help&hl=en&fg=1"
+    }
+  ],
+  "buttons": [
+    {
+      "type": "button",
+      "classes": ["pz5bj"],
+      "id": "spchx",
+      "testId": null,
+      "selector": "#spchx",
+      "text": "",
+      "name": null,
+      "value": null,
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": ["gNO89b"],
+      "id": null,
+      "testId": null,
+      "selector": "div.lJ9FBc > center > input.gNO89b",
+      "text": "",
+      "name": "btnK",
+      "value": "Google Search",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": ["RNmpXc"],
+      "id": null,
+      "testId": null,
+      "selector": "div.lJ9FBc > center > input.RNmpXc",
+      "text": "",
+      "name": "btnI",
+      "value": "I'm Feeling Lucky",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": ["gNO89b"],
+      "id": null,
+      "testId": null,
+      "selector": "div.FPdoLc.lJ9FBc > center > input.gNO89b",
+      "text": "",
+      "name": "btnK",
+      "value": "Google Search",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": [],
+      "id": "gbqfbb",
+      "testId": null,
+      "selector": "#gbqfbb",
+      "text": "",
+      "name": "btnI",
+      "value": "I'm Feeling Lucky",
+      "href": null
+    }
+  ],
+  "form_elements": [
+    {
+      "type": "textarea",
+      "classes": ["gLFyf"],
+      "id": "APjFqb",
+      "testId": null,
+      "selector": "#APjFqb",
+      "text": "",
+      "name": "q",
+      "value": null,
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "form > div > input",
+      "text": "",
+      "name": "sca_esv",
+      "value": "669c070e4a15d436",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "form > div > input",
+      "text": "",
+      "name": "source",
+      "value": "hp",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "form > div > input",
+      "text": "",
+      "name": "ei",
+      "value": "siF6Z6GHAeL3kPIPjZKWwQw",
+      "href": null
+    },
+    {
+      "type": "input",
+      "classes": [],
+      "id": null,
+      "testId": null,
+      "selector": "form > div > input",
+      "text": "",
+      "name": "iflsig",
+      "value": "AL9hbdgAAAAAZ3ovwqB8zdoKpnOuL5G22P3pdE89Wrtu",
+      "href": null
+    },
+    {
+      "type": "textarea",
+      "classes": ["csi"],
+      "id": null,
+      "testId": null,
+      "selector": "textarea.csi",
+      "text": "",
+      "name": "csi",
+      "value": null,
+      "href": null
+    }
+  ]
+} 

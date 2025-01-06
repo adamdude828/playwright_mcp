@@ -1,13 +1,14 @@
+from typing import List
 from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_close_browser(arguments: dict) -> list[TextContent]:
+async def handle_close_browser(arguments: dict) -> List[TextContent]:
     """Handle close-browser tool."""
     logger.info(f"Handling close-browser request with args: {arguments}")
     try:
-        response = await send_to_manager("close", arguments)
+        response = await send_to_manager("close-browser", arguments)
 
         if "error" in response:
             logger.error(f"Close browser failed: {response['error']}")

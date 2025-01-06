@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "python",
+      "args": [
+        "-m",
+        "playwright_mcp",
+        "--mode",
+        "server"
+      ],
+      "logging": {
+        "level": "DEBUG"
+      }
+    }
+  }
+}

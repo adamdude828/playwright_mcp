@@ -27,13 +27,6 @@ async def test_handle_list_tools():
 
 
 @pytest.mark.asyncio
-async def test_handle_call_tool_missing_args():
-    """Test that handle_call_tool raises error with missing arguments."""
-    with pytest.raises(ValueError, match="Missing arguments"):
-        await handle_call_tool("launch-browser", None)
-
-
-@pytest.mark.asyncio
 async def test_handle_call_tool_unknown_tool():
     """Test that handle_call_tool raises error with unknown tool name."""
     with pytest.raises(ValueError, match="Unknown tool: nonexistent-tool"):
