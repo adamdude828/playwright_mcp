@@ -1,37 +1,45 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
+[tool.poetry]
 name = "playwright-mcp"
 version = "0.1.0"
-description = "MCP server providing browser automation tools via Playwright"
+description = "Playwright MCP Server"
+authors = ["Adam Holsinger"]
 readme = "README.md"
-requires-python = ">=3.8"
-license = "MIT"
-keywords = ["mcp", "playwright", "browser", "automation"]
-authors = [
-    { name = "Adam Holsinger" }
-]
-dependencies = [
-    "mcp>=0.1.0",
-    "playwright>=1.39.0",
-    "asyncio>=3.4.3",
+packages = [
+    { include = "playwright_mcp", from = "src" }
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-playwright>=0.4.0",
-]
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.6"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+pydantic = "^2.10.4"
+playwright = "^1.49.1"
+mcp = "^1.2.0"
 
-[project.entry-points."mcp.servers"]
-playwright = "playwright_mcp.server:server"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.1"
+pytest-cov = "^6.0.0"
+flake8 = "^7.1.1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=src --cov-report=term-missing"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/playwright_mcp"]
+[tool.flake8]
+max-line-length = 120
+# Keep basic whitespace rules but ignore less critical ones
+extend-ignore = [
+    "E226",  # Missing whitespace around arithmetic operator
+    "E241",  # Multiple spaces after comma
+    "E251",  # Unexpected spaces around keyword parameter equals
+    "W293",  # Blank line contains whitespace
+    "E303"   # Too many blank lines
+]
+per-file-ignores = ["__init__.py:F401"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
