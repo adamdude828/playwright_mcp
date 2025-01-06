@@ -12,6 +12,8 @@ pip install -e git+https://github.com/adamdude828/playwright_mcp.git#egg=playwri
 
 ## Configuration
 
+The configuration file for mcp-cli should be placed at `~/.mcp-cli/server_config.json`.
+
 Create a `server_config.json` file with the following content:
 
 ```json
