@@ -24,12 +24,35 @@ jobs:
         run: |
           poetry install
           poetry run pip install -e .
+          poetry run pip install git+https://github.com/adamdude828/mcp-cli.git
+        
+      - name: Setup MCP CLI config
+        run: |
+          cat > server_config.json << 'EOF'
+          {
+            "mcpServers": {
+              "playwright": {
+                "command": "python",
+                "args": [
+                  "-m",
+                  "playwright_mcp",
+                  "--mode",
+                  "server"
+                ],
+                "logging": {
+                  "level": "DEBUG"
+                }
+              }
+            }
+          }
+          EOF
         
       - name: Run flake8
         run: poetry run flake8 src tests
         
-      - name: Run pytest
-        run: poetry run pytest 
+      - name: Run integration tests
+        run: |
+          poetry run pytest tests/integration -v
         
       - name: Cleanup Services
         if: always()
