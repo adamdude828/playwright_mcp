@@ -57,6 +57,10 @@ jobs:
       - name: Run first test only
         run: |
           poetry run pytest tests/integration/test_mcp_cli_setup.py::test_mcp_cli_available -v
+          
+      - name: Run unit tests
+        run: |
+          poetry run pytest tests/unit -v --cov=src/playwright_mcp --cov-report=term-missing
         
       - name: Cleanup Services
         if: always()

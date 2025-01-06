@@ -40,4 +40,8 @@ logs/
 .env
 .env.local
 *.db
-*.sqlite3 
+*.sqlite3
+
+# MCP CLI configuration
+/Users/adamholsinger/.mcp-cli/server_config.json
+.mcp-cli/server_config.json 
