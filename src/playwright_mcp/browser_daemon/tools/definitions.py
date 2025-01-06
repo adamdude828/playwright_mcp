@@ -26,7 +26,7 @@ def get_tool_definitions() -> list[Tool]:
             name="navigate",
             description=(
                 "Navigate to a URL, optionally reusing an existing browser session "
-                "or page"
+                "or page, and optionally analyze the page after navigation"
             ),
             inputSchema={
                 "type": "object",
@@ -59,6 +59,18 @@ def get_tool_definitions() -> list[Tool]:
                         "type": "boolean",
                         "description": "Whether to run browser in headless mode if creating new session",
                         "default": True
+                    },
+                    "analyze_after_navigation": {
+                        "type": "boolean",
+                        "description": "Whether to analyze the page after navigation completes",
+                        "default": False
+                    },
+                    "screenshot_path": {
+                        "type": "string",
+                        "description": (
+                            "Optional path where to save a screenshot after navigation. "
+                            "If provided, a screenshot will be taken."
+                        )
                     }
                 },
                 "required": ["url"]
