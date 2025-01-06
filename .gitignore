@@ -24,6 +24,7 @@ env/
 *.swp
 *.swo
 .DS_Store
+.cursorrules
 
 # Testing
 .tox/
@@ -41,3 +42,4 @@ logs/
 .env.local
 *.db
 *.sqlite3 
+server_config.json
