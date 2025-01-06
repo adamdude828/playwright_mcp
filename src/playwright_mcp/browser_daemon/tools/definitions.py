@@ -77,6 +77,34 @@ def get_tool_definitions() -> list[Tool]:
             }
         ),
         Tool(
+            name="execute-js",
+            description=(
+                "Execute JavaScript code in the context of a page and return the results. "
+                "The code will be executed in the browser and can interact with the DOM."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "description": "Browser session ID where the page is running"
+                    },
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID where to execute the JavaScript"
+                    },
+                    "script": {
+                        "type": "string",
+                        "description": (
+                            "JavaScript code to execute. Can be a function or expression. "
+                            "If it's a function, it should be self-contained and return a value."
+                        )
+                    }
+                },
+                "required": ["session_id", "page_id", "script"]
+            }
+        ),
+        Tool(
             name="new-tab",
             description="Open a new tab in an existing browser session",
             inputSchema={
