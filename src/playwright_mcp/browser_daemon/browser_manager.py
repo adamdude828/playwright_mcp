@@ -172,8 +172,8 @@ class BrowserManager:
             
             page = self.active_pages[page_id]
             
-            # Navigate to URL
-            await page.goto(args["url"])
+            # Navigate to URL and wait for network idle
+            await page.goto(args["url"], wait_until="networkidle")
             
             return {
                 "session_id": session_id,
