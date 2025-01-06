@@ -4,6 +4,7 @@ from .navigate import handle_navigate
 from .close_browser import handle_close_browser
 from .new_tab import handle_new_tab
 from .close_tab import handle_close_tab
+from .execute_js import handle_execute_js
 
 
 # Map of tool names to their handlers
@@ -14,4 +15,5 @@ TOOL_HANDLERS = {
     "close-browser": handle_close_browser,
     "new-tab": handle_new_tab,
     "close-tab": handle_close_tab,
+    "execute-js": handle_execute_js,
 }

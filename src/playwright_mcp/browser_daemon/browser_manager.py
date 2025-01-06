@@ -108,7 +108,7 @@ class BrowserManager:
             if command == "navigate":
                 response = await self.handle_navigate(args)
             elif command == "ping":
-                response = {"status": "pong"}
+                response = {"result": "pong"}
             elif command == "new-tab":
                 session_id = args.get("session_id")
                 if session_id not in self.sessions:
@@ -119,6 +119,8 @@ class BrowserManager:
                     page_id = f"page_{id(page)}"
                     self.active_pages[page_id] = page
                     response = {"page_id": page_id}
+            elif command == "execute-js":
+                response = await self.handle_execute_js(args)
             elif command == "close-browser":
                 session_id = args.get("session_id")
                 success = await self.close_browser(session_id)
@@ -172,15 +174,28 @@ class BrowserManager:
             
             page = self.active_pages[page_id]
             
-            # Navigate to URL
-            await page.goto(args["url"])
+            # Navigate to URL and wait for network idle
+            await page.goto(args["url"], wait_until="networkidle")
             
-            return {
+            response = {
                 "session_id": session_id,
                 "page_id": page_id,
                 "created_session": created_session,
                 "created_page": created_page
             }
+
+            # Take screenshot if path provided
+            if screenshot_path := args.get("screenshot_path"):
+                await page.screenshot(path=screenshot_path, full_page=True)
+                response["screenshot_path"] = screenshot_path
+
+            # If analysis is requested, perform it
+            if args.get("analyze_after_navigation"):
+                from .tools.page_analyzer import get_page_elements_map
+                elements_map = await get_page_elements_map(page)
+                response["analysis"] = elements_map
+
+            return response
         except Exception as e:
             logger.error(f"Navigation failed: {e}")
             return {"error": str(e)}
@@ -238,6 +253,31 @@ class BrowserManager:
 
         # Exit the process
         os._exit(0)
+
+    async def handle_execute_js(self, args: dict) -> dict:
+        """Handle execute-js command by evaluating JavaScript in a page context."""
+        await self._update_activity()
+        
+        try:
+            session_id = args.get("session_id")
+            page_id = args.get("page_id")
+            script = args.get("script")
+
+            # Validate session and page exist
+            if session_id not in self.sessions:
+                return {"error": f"No browser session found for ID: {session_id}"}
+            if page_id not in self.active_pages:
+                return {"error": f"No page found for ID: {page_id}"}
+
+            page = self.active_pages[page_id]
+            
+            # Execute the script and get the result
+            result = await page.evaluate(script)
+            
+            return {"result": result}
+        except Exception as e:
+            logger.error(f"JavaScript execution failed: {e}")
+            return {"error": str(e)}
 
 
 async def main():

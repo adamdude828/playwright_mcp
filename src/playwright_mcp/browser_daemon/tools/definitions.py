@@ -26,7 +26,7 @@ def get_tool_definitions() -> list[Tool]:
             name="navigate",
             description=(
                 "Navigate to a URL, optionally reusing an existing browser session "
-                "or page"
+                "or page, and optionally analyze the page after navigation"
             ),
             inputSchema={
                 "type": "object",
@@ -59,9 +59,49 @@ def get_tool_definitions() -> list[Tool]:
                         "type": "boolean",
                         "description": "Whether to run browser in headless mode if creating new session",
                         "default": True
+                    },
+                    "analyze_after_navigation": {
+                        "type": "boolean",
+                        "description": "Whether to analyze the page after navigation completes",
+                        "default": False
+                    },
+                    "screenshot_path": {
+                        "type": "string",
+                        "description": (
+                            "Optional path where to save a screenshot after navigation. "
+                            "If provided, a screenshot will be taken."
+                        )
                     }
                 },
                 "required": ["url"]
+            }
+        ),
+        Tool(
+            name="execute-js",
+            description=(
+                "Execute JavaScript code in the context of a page and return the results. "
+                "The code will be executed in the browser and can interact with the DOM."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "description": "Browser session ID where the page is running"
+                    },
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID where to execute the JavaScript"
+                    },
+                    "script": {
+                        "type": "string",
+                        "description": (
+                            "JavaScript code to execute. Can be a function or expression. "
+                            "If it's a function, it should be self-contained and return a value."
+                        )
+                    }
+                },
+                "required": ["session_id", "page_id", "script"]
             }
         ),
         Tool(
