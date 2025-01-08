@@ -3,6 +3,7 @@ import subprocess
 import pytest
 import time
 import re
+import json
 
 
 @pytest.fixture(scope="module")
@@ -40,11 +41,19 @@ def clean_output(output: str) -> str:
     """Remove ANSI escape codes and formatting characters from output."""
     # Remove ANSI escape codes
     output = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', output)
-    # Remove box drawing characters
-    output = re.sub(r'[─│╭╮╰╯]', '', output)
+    # Remove box drawing characters and extra spaces
+    output = re.sub(r'[─│╭╮╰╯]|\s+', ' ', output)
     # Remove extra whitespace
-    output = re.sub(r'\s+', ' ', output)
-    return output.strip()
+    output = output.strip()
+    # Extract just the response part
+    if "Tool Response" in output:
+        output = output.split("Tool Response")[1].strip()
+        # Find the first [ and last ] to get just the response array
+        start = output.find('[')
+        end = output.rfind(']')
+        if start != -1 and end != -1:
+            output = output[start:end+1]
+    return output
 
 
 def test_navigate_with_analysis(daemon):
@@ -61,11 +70,18 @@ def test_navigate_with_analysis(daemon):
     assert result.returncode == 0, "Navigation should succeed"
     output = clean_output(result.stdout)
     
+    # Parse the response
+    response = eval(output.strip('[]'))
+    data = json.loads(response['text'])
+    
     # Verify we got a non-empty response with key elements
-    assert output, "Output should not be empty"
-    assert "Navigated successfully" in output
-    assert "Tool Response" in output
-    assert "anchors" in output  # Should contain analysis results
+    assert data, "Response data should not be empty"
+    assert 'session_id' in data, "Response should include session ID"
+    assert 'page_id' in data, "Response should include page ID"
+    assert 'analysis' in data, "Response should include analysis results"
+    assert 'interactive_elements' in data['analysis'], "Analysis should include interactive elements"
+    assert 'anchors' in data['analysis']['interactive_elements'], "Analysis should include anchors data"
+    assert len(data['analysis']['interactive_elements']['anchors']) > 0, "Should find at least one anchor on example.com"
 
 
 def test_navigate_without_analysis(daemon):
@@ -80,7 +96,17 @@ def test_navigate_without_analysis(daemon):
     )
     
     assert result.returncode == 0, "Navigation should succeed"
-    assert "Navigated successfully" in result.stdout
+    output = clean_output(result.stdout)
+    
+    # Parse the response
+    response = eval(output.strip('[]'))
+    data = json.loads(response['text'])
+    
+    # Verify we got a non-empty response with key elements
+    assert data, "Response data should not be empty"
+    assert 'session_id' in data, "Response should include session ID"
+    assert 'page_id' in data, "Response should include page ID"
+    assert 'analysis' not in data, "Response should not include analysis results"
 
 
 def test_navigate_invalid_url(daemon):

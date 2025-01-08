@@ -54,9 +54,13 @@ jobs:
           }
           EOF
         
-      - name: Run first test only
+      - name: Run unit tests
         run: |
-          poetry run pytest tests/integration/test_mcp_cli_setup.py::test_mcp_cli_available -v
+          poetry run pytest tests/unit/ -v
+          
+      - name: Run integration tests
+        run: |
+          poetry run pytest tests/integration/ -v
         
       - name: Cleanup Services
         if: always()
