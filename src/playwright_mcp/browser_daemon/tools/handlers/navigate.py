@@ -11,28 +11,22 @@ async def handle_navigate(arguments: dict) -> list[TextContent]:
     try:
         response = await send_to_manager("navigate", arguments)
         
-        # Check if analysis was requested and is present in response
-        if arguments.get("analyze_after_navigation") and "analysis" in response:
-            elements_map = response["analysis"]
-            summary = elements_map["summary"]
-            interactive = elements_map["interactive_elements"]
-            
-            # Create a human-readable summary
-            text = (
-                f"Navigated successfully and analyzed page:\n"
-                f"Found {summary['total_anchors']} links, "
-                f"{summary['total_buttons']} buttons, and "
-                f"{summary['total_form_elements']} form elements.\n\n"
-                f"Full element details:\n"
-                f"{json.dumps(interactive, indent=2)}"
-            )
-        else:
-            text = "Navigated successfully"
-
-        # Add screenshot info if available
+        # Build response data with all fields from the manager's response
+        response_data = {
+            "session_id": response["session_id"],
+            "page_id": response["page_id"],
+            "created_session": response["created_session"],
+            "created_page": response["created_page"]
+        }
+        
+        # Include analysis results if present
+        if "analysis" in response:
+            response_data["analysis"] = response["analysis"]
+        
+        # Include screenshot path if present
         if "screenshot_path" in response:
-            text = f"{text}\nScreenshot saved to: {response['screenshot_path']}"
-
-        return [TextContent(type="text", text=text)]
+            response_data["screenshot_path"] = response["screenshot_path"]
+        
+        return [TextContent(type="text", text=json.dumps(response_data))]
     except Exception as e:
-        return [TextContent(type="text", text=str(e))] 
+        return [TextContent(type="text", text=json.dumps({"error": str(e)}))] 

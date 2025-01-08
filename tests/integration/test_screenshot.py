@@ -4,6 +4,7 @@ import pytest
 import time
 import os
 import re
+import json
 
 
 @pytest.fixture(scope="module")
@@ -49,26 +50,40 @@ def clean_output(output: str) -> str:
 
 
 def test_navigate_with_screenshot(daemon):
-    """Test navigation with screenshot capture on a simple static site."""
-    screenshot_path = "test_integration_screenshot.png"
+    """Test navigation with screenshot capture."""
+    # Create a temporary file path for the screenshot
+    screenshot_path = "test_screenshot.png"
     
     try:
-        # Navigate to a simple static site with screenshot enabled
         result = subprocess.run(
             ['mcp-cli', '--server', 'playwright',
-             'call-tool', '--tool', 'navigate',
-             '--tool-args', f'{{"url": "https://example.com", "screenshot_path": "{screenshot_path}"}}'],
+             '--tool', 'navigate',
+             '--tool-args', f'{{"url": "https://example.com", "screenshot_path": "{screenshot_path}"}}',
+             'call-tool'],
             capture_output=True,
             text=True
         )
         
         assert result.returncode == 0, "Navigation should succeed"
-        output = clean_output(result.stdout)
+        output = result.stdout
         
-        # Verify we got a non-empty response with screenshot confirmation
-        assert output, "Output should not be empty"
-        assert "Navigated successfully" in output
-        assert f"Screenshot saved to: {screenshot_path}" in output
+        # Extract the JSON response
+        response_start = output.find('{"session_id"')
+        response_end = output.find('}', response_start) + 1
+        response_json = output[response_start:response_end]
+        
+        # Clean up the response by removing special characters
+        response_json = re.sub(r'[^\x20-\x7E]', '', response_json)
+        
+        # Parse the response
+        data = json.loads(response_json)
+        
+        # Verify we got a non-empty response with key elements
+        assert data, "Response data should not be empty"
+        assert 'session_id' in data, "Response should include session ID"
+        assert 'page_id' in data, "Response should include page ID"
+        assert 'screenshot_path' in data, "Response should include screenshot path"
+        assert data['screenshot_path'] == screenshot_path, "Screenshot path should match"
         
         # Verify the screenshot file exists and has content
         assert os.path.exists(screenshot_path), "Screenshot file should exist"
@@ -106,21 +121,38 @@ def test_navigate_screenshot_with_analysis(daemon):
     try:
         result = subprocess.run(
             ['mcp-cli', '--server', 'playwright',
-             'call-tool', '--tool', 'navigate',
-             '--tool-args', f'{{"url": "https://example.com", '
-                          f'"screenshot_path": "{screenshot_path}", '
-                          f'"analyze_after_navigation": true}}'],
+             '--tool', 'navigate',
+             '--tool-args',
+             f'{{"url": "https://example.com", '
+             f'"screenshot_path": "{screenshot_path}", '
+             f'"analyze_after_navigation": true}}',
+             'call-tool'],
             capture_output=True,
             text=True
         )
         
         assert result.returncode == 0, "Navigation should succeed"
-        output = clean_output(result.stdout)
+        output = result.stdout
         
-        # Verify both screenshot and analysis results are present
-        assert "Navigated successfully" in output
-        assert f"Screenshot saved to: {screenshot_path}" in output
-        assert "anchors" in output  # Analysis results
+        # Extract the JSON response
+        response_start = output.find('{"session_id"')
+        response_end = output.find('"}\'') + 2  # Find the end of the JSON string
+        response_json = output[response_start:response_end]
+        
+        # Clean up the response by removing special characters
+        response_json = re.sub(r'[^\x20-\x7E]', '', response_json)
+        
+        # Parse the response
+        data = json.loads(response_json)
+        
+        # Verify we got a non-empty response with key elements
+        assert data, "Response data should not be empty"
+        assert 'session_id' in data, "Response should include session ID"
+        assert 'page_id' in data, "Response should include page ID"
+        assert 'screenshot_path' in data, "Response should include screenshot path"
+        assert data['screenshot_path'] == screenshot_path, "Screenshot path should match"
+        assert 'analysis' in data, "Response should include analysis results"
+        assert 'interactive_elements' in data['analysis'], "Analysis should include interactive elements"
         
         # Verify the screenshot file exists and has content
         assert os.path.exists(screenshot_path), "Screenshot file should exist"

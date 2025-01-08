@@ -1,6 +1,22 @@
 import subprocess
 import shutil
 import time
+import json
+import re
+
+
+def clean_output(output: str) -> str:
+    """Remove ANSI escape codes and formatting characters from output."""
+    # Remove ANSI escape codes
+    output = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', output)
+    # Remove box drawing characters and extra spaces
+    output = re.sub(r'[─│╭╮╰╯]|\s+', ' ', output)
+    # Remove extra whitespace
+    output = output.strip()
+    # Extract just the response part
+    if "Tool Response" in output:
+        output = output.split("Tool Response")[1].strip()
+    return output
 
 
 def test_mcp_cli_available():
@@ -162,7 +178,17 @@ def test_start_navigate_stop_cycle():
         text=True
     )
     assert nav_result.returncode == 0, "Navigation should succeed"
-    assert "Navigated successfully" in nav_result.stdout
+    
+    # Clean and parse the output
+    output = clean_output(nav_result.stdout)
+    response = eval(output.strip('[]'))
+    data = json.loads(response['text'])
+    
+    # Check for required fields in response
+    assert 'session_id' in data, "Response should include session ID"
+    assert 'page_id' in data, "Response should include page ID"
+    assert data['created_session'] is True, "Should indicate new session was created"
+    assert data['created_page'] is True, "Should indicate new page was created"
     
     # Stop the daemon
     stop_result = subprocess.run(

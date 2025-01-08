@@ -4,6 +4,7 @@ import pytest
 import time
 import json
 import re
+import ast
 
 
 @pytest.fixture(scope="module")
@@ -41,11 +42,14 @@ def clean_output(output: str) -> str:
     """Remove ANSI escape codes and formatting characters from output."""
     # Remove ANSI escape codes
     output = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', output)
-    # Remove box drawing characters
-    output = re.sub(r'[─│╭╮╰╯]', '', output)
+    # Remove box drawing characters and extra spaces
+    output = re.sub(r'[─│╭╮╰╯]|\s+', ' ', output)
     # Remove extra whitespace
-    output = re.sub(r'\s+', ' ', output)
-    return output.strip()
+    output = output.strip()
+    # Extract just the response part
+    if "Tool Response" in output:
+        output = output.split("Tool Response")[1].strip()
+    return output
 
 
 @pytest.fixture
@@ -63,28 +67,21 @@ def browser_page(daemon):
     assert result.returncode == 0, "Navigation should succeed"
     output = clean_output(result.stdout)
     
-    # Extract session_id and page_id from the response
-    response_text = output.split("Tool Response")[1].strip()
-    response_text = response_text.strip("[]")  # Remove list brackets
-    response = json.loads(response_text.replace("'", '"'))
+    # Extract the response text from the list format
+    response_text = output.strip("[]")
     
-    # The response contains a text field with the actual data
-    text_content = response.get("text", "")
-    if "session_id" not in text_content:
-        pytest.fail(f"Unexpected response format: {text_content}")
+    # First parse the outer response using ast.literal_eval
+    try:
+        response = ast.literal_eval(response_text)
+        # Then parse the inner JSON text
+        data = json.loads(response["text"])
+    except (ValueError, SyntaxError, json.JSONDecodeError) as e:
+        pytest.fail(f"Failed to parse response: {response_text}\nError: {e}")
     
-    # Extract IDs from the text content
-    session_id = None
-    page_id = None
-    for line in text_content.split("\n"):
-        if "session_id" in line:
-            session_id = line.split(":")[1].strip().strip('"')
-        elif "page_id" in line:
-            page_id = line.split(":")[1].strip().strip('"')
+    assert "session_id" in data, "Response should include session ID"
+    assert "page_id" in data, "Response should include page ID"
     
-    assert session_id and page_id, "Should have valid session and page IDs"
-    
-    yield {"session_id": session_id, "page_id": page_id}
+    return {"session_id": data["session_id"], "page_id": data["page_id"]}
 
 
 def test_execute_simple_js(browser_page):
