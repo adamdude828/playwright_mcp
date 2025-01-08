@@ -32,6 +32,11 @@ jobs:
           # Verify installation
           poetry run which mcp-cli || true
           poetry run mcp-cli --help || true
+          
+      - name: Install Playwright browsers
+        run: |
+          poetry run playwright install chromium
+          poetry run playwright install-deps
         
       - name: Setup MCP CLI config
         run: |
