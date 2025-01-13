@@ -14,14 +14,30 @@ async def handle_stop_daemon(args: dict = None) -> List[TextContent]:
     try:
         # Find any running daemon processes
         result = subprocess.run(
-            ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
+            ["ps", "-o", "pid,etime", "-p", subprocess.check_output(
+                ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
+                text=True
+            ).strip()],
             capture_output=True,
             text=True
         )
         
+        # Parse the output to find processes running for more than 2 seconds
+        daemon_pids = []
         if result.stdout:
-            # Kill each process
-            for pid in result.stdout.strip().split('\n'):
+            lines = result.stdout.strip().split('\n')[1:]  # Skip header
+            for line in lines:
+                parts = line.strip().split()
+                if len(parts) >= 2:
+                    pid = parts[0]
+                    elapsed = parts[1]
+                    # Only consider it a daemon if it's been running for more than 2 seconds
+                    if ':' in elapsed or int(elapsed) > 2:
+                        daemon_pids.append(pid)
+        
+        if daemon_pids:
+            # Kill each daemon process
+            for pid in daemon_pids:
                 try:
                     os.kill(int(pid), signal.SIGTERM)
                     logger.info(f"Sent SIGTERM to process {pid}")
@@ -32,6 +48,9 @@ async def handle_stop_daemon(args: dict = None) -> List[TextContent]:
         else:
             return [TextContent(type="text", text="No running daemon found")]
             
+    except subprocess.CalledProcessError:
+        # No processes found by pgrep
+        return [TextContent(type="text", text="No running daemon found")]
     except Exception as e:
         logger.error(f"Failed to stop daemon: {e}")
         return [TextContent(type="text", text=f"Error: {str(e)}")] 

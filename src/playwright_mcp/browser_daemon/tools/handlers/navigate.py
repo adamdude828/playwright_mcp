@@ -29,4 +29,5 @@ async def handle_navigate(arguments: dict) -> list[TextContent]:
         
         return [TextContent(type="text", text=json.dumps(response_data))]
     except Exception as e:
-        return [TextContent(type="text", text=json.dumps({"error": str(e)}))] 
+        # Return error message directly without JSON wrapping
+        return [TextContent(type="text", text=str(e))] 

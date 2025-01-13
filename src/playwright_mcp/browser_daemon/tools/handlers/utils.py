@@ -56,6 +56,10 @@ async def send_to_manager(command: str, args: dict) -> dict:
     socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
     logger.info(f"Attempting to connect to browser manager at {socket_path}")
 
+    # Check if socket exists first
+    if not os.path.exists(socket_path):
+        raise Exception("Browser daemon is not running. Please call the 'start-daemon' tool first.")
+
     try:
         reader, writer = await asyncio.open_unix_connection(socket_path)
         logger.debug("Connected to browser manager")
