@@ -122,6 +122,24 @@ TOOLS = [
         }
     ),
     Tool(
+        name="screenshot",
+        description="Take a screenshot of the current page",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "page_id": {
+                    "type": "string",
+                    "description": "Page ID to take screenshot of"
+                },
+                "save_path": {
+                    "type": "string",
+                    "description": "Path where to save the screenshot"
+                }
+            },
+            "required": ["page_id", "save_path"]
+        }
+    ),
+    Tool(
         name="analyze-page",
         description="Analyze the current page for interactive elements",
         inputSchema={

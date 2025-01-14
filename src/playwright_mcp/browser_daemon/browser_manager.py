@@ -136,6 +136,8 @@ class BrowserManager:
                     await page.close()
                     del self.active_pages[page_id]
                     response = {"success": True}
+            elif command == "handle-screenshot":
+                response = await self.handle_screenshot(args)
             else:
                 response = {"error": "unknown command"}
             
@@ -286,6 +288,32 @@ class BrowserManager:
             return await explore_dom(page, selector)
         except Exception as e:
             logger.error(f"DOM exploration failed: {e}")
+            return {"error": str(e)}
+
+    async def handle_screenshot(self, args: dict) -> dict:
+        """Handle screenshot command by taking a screenshot of the page."""
+        await self._update_activity()
+        
+        try:
+            page_id = args.get("page_id")
+            save_path = args.get("save_path")
+
+            if not page_id or page_id not in self.active_pages:
+                return {"error": f"No page found for ID: {page_id}"}
+            if not save_path:
+                return {"error": "save_path is required"}
+
+            page = self.active_pages[page_id]
+            
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+            # Take the screenshot
+            await page.screenshot(path=save_path)
+            
+            return {"success": True, "path": save_path}
+        except Exception as e:
+            logger.error(f"Screenshot failed: {e}")
             return {"error": str(e)}
 
 
