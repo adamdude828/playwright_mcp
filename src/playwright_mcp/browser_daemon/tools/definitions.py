@@ -26,7 +26,7 @@ def get_tool_definitions() -> list[Tool]:
             name="navigate",
             description=(
                 "Navigate to a URL, optionally reusing an existing browser session "
-                "or page, and optionally analyze the page after navigation"
+                "or page"
             ),
             inputSchema={
                 "type": "object",
@@ -60,17 +60,10 @@ def get_tool_definitions() -> list[Tool]:
                         "description": "Whether to run browser in headless mode if creating new session",
                         "default": True
                     },
-                    "analyze_after_navigation": {
-                        "type": "boolean",
-                        "description": "Whether to analyze the page after navigation completes",
-                        "default": False
-                    },
-                    "screenshot_path": {
+                    "wait_until": {
                         "type": "string",
-                        "description": (
-                            "Optional path where to save a screenshot after navigation. "
-                            "If provided, a screenshot will be taken."
-                        )
+                        "description": "When to consider navigation complete",
+                        "enum": ["load", "domcontentloaded", "networkidle"]
                     }
                 },
                 "required": ["url"]
@@ -162,6 +155,24 @@ def get_tool_definitions() -> list[Tool]:
                     }
                 },
                 "required": ["session_id", "page_id"]
+            }
+        ),
+        Tool(
+            name="explore-dom",
+            description="Explore immediate children of a DOM element",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID to explore"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "CSS selector to filter elements"
+                    }
+                },
+                "required": ["page_id"]
             }
         )
     ]

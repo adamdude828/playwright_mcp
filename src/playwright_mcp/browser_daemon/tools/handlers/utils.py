@@ -1,17 +1,54 @@
+"""Utility functions for MCP tool handlers and browser daemon communication.
+
+This module provides core utilities for:
+1. Browser daemon management (checking status, starting daemon)
+2. Inter-process communication with the browser daemon
+3. MCP-compliant response formatting
+
+The browser daemon is a long-running process that manages browser instances and
+handles browser automation commands. Communication happens over a Unix domain socket.
+
+Example:
+    ```python
+    # Check if daemon is running
+    is_running = await check_daemon_running()
+    if not is_running:
+        await start_daemon()
+        
+    # Send command to daemon
+    result = await send_to_manager("launch_browser", {"browser_type": "chromium"})
+    
+    # Format MCP response
+    response = create_response(result)
+    ```
+"""
+
 import asyncio
 import json
 import os
 import subprocess
 import sys
+from mcp.types import TextContent
 from ....utils.logging import setup_logging
 
 
 # Configure logging
-logger = setup_logging("mcp_server")
+logger = setup_logging("handler_utils")
 
 
 async def check_daemon_running() -> bool:
-    """Check if the browser daemon is running by attempting to ping it."""
+    """Check if the browser daemon is running by attempting to ping it.
+    
+    Makes a connection attempt to the daemon's Unix domain socket and sends
+    a ping command. The daemon is considered running if it responds with 'pong'.
+    
+    Returns:
+        bool: True if daemon is running and responsive, False otherwise
+    
+    Note:
+        This function handles its own exceptions and always returns a boolean.
+        Failed connections, timeouts, etc. all result in False.
+    """
     socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
     logger.debug(f"Checking if daemon is running at socket: {socket_path}")
     
@@ -40,19 +77,75 @@ async def check_daemon_running() -> bool:
 
 
 async def start_daemon() -> None:
-    """Start the browser daemon if it's not running."""
+    """Start the browser daemon if it's not running.
+    
+    Launches the browser daemon as a background process with the correct Python path.
+    The daemon process is started with stdout/stderr capture to detect immediate failures.
+    
+    Raises:
+        Exception: If the daemon fails to start or exits immediately
+        
+    Note:
+        This function modifies the PYTHONPATH to ensure the daemon can import
+        required modules. The daemon process continues running after this function returns.
+    """
     logger.info("Starting browser daemon...")
     
-    # Run the daemon module directly in background
-    cmd = f"nohup {sys.executable} -m playwright_mcp.browser_daemon.browser_manager > daemon.log 2>&1 &"
-    logger.debug(f"Running command: {cmd}")
-    subprocess.Popen(cmd, shell=True)
+    # Get the current Python path
+    python_path = os.environ.get('PYTHONPATH', '')
+    
+    # Add the project root to PYTHONPATH if not already there
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+    if project_root not in python_path:
+        python_path = f"{project_root}:{python_path}" if python_path else project_root
+    
+    env = os.environ.copy()
+    env['PYTHONPATH'] = python_path
+    
+    # Start the daemon as a background process with output capture
+    process = subprocess.Popen(
+        [sys.executable, '-m', 'playwright_mcp.browser_daemon.browser_manager'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env
+    )
     
     logger.info("Daemon start command issued")
+    
+    # Check the process hasn't immediately failed
+    try:
+        retcode = process.wait(timeout=0.1)  # Wait briefly to catch immediate failures
+        stdout, stderr = process.communicate()
+        logger.error(f"Daemon failed to start. Exit code: {retcode}")
+        logger.error(f"Stdout: {stdout.decode()}")
+        logger.error(f"Stderr: {stderr.decode()}")
+        raise Exception("Daemon failed to start")
+    except subprocess.TimeoutExpired:
+        # Process is still running, which is what we want
+        pass
 
 
 async def send_to_manager(command: str, args: dict) -> dict:
-    """Send a command to the browser manager service."""
+    """Send a command to the browser manager service.
+    
+    Establishes a connection to the browser daemon's Unix domain socket and sends
+    a JSON-encoded command with arguments. Waits for and parses the response.
+    
+    Args:
+        command: The command name to execute
+        args: Dictionary of arguments for the command
+        
+    Returns:
+        dict: The parsed response data from the daemon
+        
+    Raises:
+        Exception: If daemon is not running or connection fails
+        ValueError: If daemon returns an error response
+        
+    Note:
+        The connection is closed after receiving the response. For long-running
+        operations, the daemon maintains state independently of this connection.
+    """
     socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
     logger.info(f"Attempting to connect to browser manager at {socket_path}")
 
@@ -64,15 +157,16 @@ async def send_to_manager(command: str, args: dict) -> dict:
         reader, writer = await asyncio.open_unix_connection(socket_path)
         logger.debug("Connected to browser manager")
 
-        # Send request
+        # Send request with delimiter
         request = {"command": command, "args": args}
         logger.debug(f"Sending request: {request}")
         writer.write(json.dumps(request).encode() + b'\n')
         await writer.drain()
 
-        # Get response
-        logger.debug("Waiting for response...")
-        response = await reader.readline()
+        # Read response with a large buffer size
+        response = await reader.read(1024 * 1024)  # 1MB buffer
+        if b'\n' in response:
+            response = response.split(b'\n')[0]  # Take everything up to first newline
         response_data = json.loads(response.decode())
         logger.debug(f"Received response: {response_data}")
 
@@ -87,3 +181,40 @@ async def send_to_manager(command: str, args: dict) -> dict:
         raise Exception("Browser daemon is not running. Please call the 'start-daemon' tool first.")
     except Exception as e:
         raise Exception(str(e))
+
+
+def create_response(text: str | dict, is_error: bool = False) -> dict:
+    """Create a standard MCP-compliant response.
+    
+    Formats the given text or data into an MCP protocol response object with
+    appropriate content type and error status.
+    
+    Args:
+        text: The response text or data dictionary to format
+        is_error: Whether this response represents an error condition
+        
+    Returns:
+        dict: An MCP-compliant response object with structure:
+            {
+                "isError": bool,
+                "content": [
+                    {
+                        "type": "text" | "json",
+                        "text": str
+                    }
+                ]
+            }
+            
+    Note:
+        Dictionary inputs are automatically serialized to JSON and marked with
+        type="json". All other inputs are converted to strings with type="text".
+    """
+    if isinstance(text, dict):
+        content = [TextContent(type="json", text=json.dumps(text, indent=2))]
+    else:
+        content = [TextContent(type="text", text=str(text))]
+        
+    return {
+        "isError": is_error,
+        "content": content
+    }

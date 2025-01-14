@@ -1,16 +1,14 @@
-"""Core MCP server module."""
-from ..utils.logging import setup_logging
-from .server import start_server
-
-# Configure logging
-logger = setup_logging("mcp_server")
+"""Core MCP server functionality."""
+from typing import Dict, Any
+from .server import TOOLS
 
 
-async def main():
-    """Start the MCP server."""
-    logger.info("Starting MCP server")
-    try:
-        await start_server()
-    except Exception as e:
-        logger.error(f"Server error: {e}")
-        raise 
+def get_tool_definitions() -> Dict[str, Any]:
+    """Get tool definitions."""
+    return {
+        tool.name: {
+            "description": tool.description,
+            "parameters": tool.inputSchema
+        }
+        for tool in TOOLS
+    } 

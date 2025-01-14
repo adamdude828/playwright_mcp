@@ -1,7 +1,6 @@
 import subprocess
 import time
 import re
-import json
 
 
 def clean_output(output: str) -> str:
@@ -43,7 +42,7 @@ def test_navigate_returns_session_and_page_ids():
     # Clean and parse the output
     output = clean_output(result.stdout)
     response = eval(output.strip('[]'))
-    data = json.loads(response['text'])
+    data = eval(response['text'])
     
     # Verify response contains session and page IDs
     assert 'session_id' in data, "Response should include session ID"
@@ -83,7 +82,7 @@ def test_navigate_reuses_session():
     # Clean and parse the output
     output = clean_output(result.stdout)
     response = eval(output.strip('[]'))
-    data = json.loads(response['text'])
+    data = eval(response['text'])
     
     # Get session ID from first navigation
     assert 'session_id' in data, "Response should include session ID"
@@ -105,7 +104,7 @@ def test_navigate_reuses_session():
     # Clean and parse the output
     output = clean_output(result.stdout)
     response = eval(output.strip('[]'))
-    data = json.loads(response['text'])
+    data = eval(response['text'])
     
     # Verify session was reused
     assert data['session_id'] == session_id, "Should reuse the same session ID"

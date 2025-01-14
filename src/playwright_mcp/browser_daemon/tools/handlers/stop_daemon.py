@@ -1,56 +1,48 @@
+from typing import Dict
+import asyncio
 import os
 import signal
 import subprocess
-from typing import List
-from mcp.types import TextContent
-from ....utils.logging import setup_logging
+from .utils import create_response, check_daemon_running
 
 
-logger = setup_logging("stop_daemon_handler")
-
-
-async def handle_stop_daemon(args: dict = None) -> List[TextContent]:
-    """Handle the stop-daemon tool request."""
+async def handle_stop_daemon(arguments: Dict) -> Dict:
+    """Handle stop-daemon command by stopping the browser daemon if it's running."""
     try:
-        # Find any running daemon processes
+        # Check if daemon is running
+        if not await check_daemon_running():
+            return create_response("No running daemon found")
+            
+        # Find and kill daemon process
         result = subprocess.run(
-            ["ps", "-o", "pid,etime", "-p", subprocess.check_output(
-                ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
-                text=True
-            ).strip()],
+            ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
             capture_output=True,
             text=True
         )
         
-        # Parse the output to find processes running for more than 2 seconds
-        daemon_pids = []
-        if result.stdout:
-            lines = result.stdout.strip().split('\n')[1:]  # Skip header
-            for line in lines:
-                parts = line.strip().split()
-                if len(parts) >= 2:
-                    pid = parts[0]
-                    elapsed = parts[1]
-                    # Only consider it a daemon if it's been running for more than 2 seconds
-                    if ':' in elapsed or int(elapsed) > 2:
-                        daemon_pids.append(pid)
-        
-        if daemon_pids:
-            # Kill each daemon process
-            for pid in daemon_pids:
+        if not result.stdout:
+            return create_response("No daemon process found")
+            
+        # Kill each matching process
+        for pid in result.stdout.strip().split('\n'):
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+                
+        # Wait for processes to terminate (up to 5 seconds)
+        for _ in range(10):
+            if not await check_daemon_running():
+                # Also try to remove the socket file
+                socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
                 try:
-                    os.kill(int(pid), signal.SIGTERM)
-                    logger.info(f"Sent SIGTERM to process {pid}")
-                except ProcessLookupError:
-                    pass  # Process already gone
+                    os.unlink(socket_path)
+                except OSError:
+                    pass
+                return create_response("Browser daemon stopped successfully")
+            await asyncio.sleep(0.5)
             
-            return [TextContent(type="text", text="Browser daemon stopped successfully")]
-        else:
-            return [TextContent(type="text", text="No running daemon found")]
-            
-    except subprocess.CalledProcessError:
-        # No processes found by pgrep
-        return [TextContent(type="text", text="No running daemon found")]
+        return create_response("Failed to stop browser daemon: timeout waiting for daemon to stop", is_error=True)
+        
     except Exception as e:
-        logger.error(f"Failed to stop daemon: {e}")
-        return [TextContent(type="text", text=f"Error: {str(e)}")] 
+        return create_response(f"Failed to stop browser daemon: {str(e)}", is_error=True) 

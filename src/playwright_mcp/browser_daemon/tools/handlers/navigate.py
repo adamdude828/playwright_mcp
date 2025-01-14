@@ -1,33 +1,23 @@
-from ....utils.logging import setup_logging
-from ...tools.handlers.utils import send_to_manager
+from typing import Dict, List
 from mcp.types import TextContent
-import json
-
-logger = setup_logging("navigate_handler")
+from .utils import create_response, send_to_manager
 
 
-async def handle_navigate(arguments: dict) -> list[TextContent]:
-    """Handle the navigate command."""
+async def handle_navigate(arguments: Dict) -> List[TextContent]:
+    """Handle navigate command by navigating to a URL in a new or existing session."""
     try:
-        response = await send_to_manager("navigate", arguments)
+        # Send navigate command to browser manager
+        result = await send_to_manager("navigate", arguments)
         
-        # Build response data with all fields from the manager's response
+        # Format response with expected field names
         response_data = {
-            "session_id": response["session_id"],
-            "page_id": response["page_id"],
-            "created_session": response["created_session"],
-            "created_page": response["created_page"]
+            "session_id": result["session_id"],
+            "page_id": result["page_id"],
+            "created_session": result["created_session"],
+            "created_page": result["created_page"]
         }
         
-        # Include analysis results if present
-        if "analysis" in response:
-            response_data["analysis"] = response["analysis"]
+        return [TextContent(type="text", text=str(response_data))]
         
-        # Include screenshot path if present
-        if "screenshot_path" in response:
-            response_data["screenshot_path"] = response["screenshot_path"]
-        
-        return [TextContent(type="text", text=json.dumps(response_data))]
     except Exception as e:
-        # Return error message directly without JSON wrapping
         return [TextContent(type="text", text=str(e))] 

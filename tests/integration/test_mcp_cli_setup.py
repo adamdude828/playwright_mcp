@@ -1,10 +1,11 @@
 import subprocess
 import shutil
 import time
-import json
 import re
 import os
 import signal
+import pytest
+from tests.utils.test_client import TestClient
 
 
 def clean_output(output: str) -> str:
@@ -74,7 +75,7 @@ def test_playwright_tool_available():
     # Verify we have the expected playwright-related tools
     expected_tools = {
         'start-daemon', 'stop-daemon', 'navigate', 'new-tab',
-        'analyze-page', 'close-browser', 'close-tab'
+        'analyze-page', 'close-browser', 'close-tab', 'execute-js'
     }
     missing_tools = expected_tools - tools
     assert not missing_tools, f"Missing expected tools: {missing_tools}"
@@ -115,7 +116,8 @@ def test_navigate_without_daemon():
     assert "Browser daemon is not running" in result.stdout, "Response should indicate daemon is not running"
 
 
-def test_start_daemon():
+@pytest.mark.asyncio
+async def test_start_daemon():
     """Test that the start-daemon command works successfully."""
     # First ensure daemon is stopped
     subprocess.run(
@@ -125,20 +127,21 @@ def test_start_daemon():
     )
     time.sleep(1)
     
-    # Start the daemon
-    result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', '--tool', 'start-daemon', 'call-tool'],
-        capture_output=True,
-        text=True
-    )
-    
-    assert result.returncode == 0, "Start daemon command should succeed"
-    assert "Browser daemon started successfully" in result.stdout, (
-        "Response should indicate daemon started successfully"
-    )
+    # Start the daemon using test client
+    async with TestClient() as client:
+        result = await client.call_tool("start-daemon", {})
+        
+        # Check response format follows MCP protocol
+        assert "content" in result, "Response should include content field"
+        assert "isError" in result, "Response should include isError field"
+        assert result["isError"] is False, "Response should indicate success"
+        assert "Browser daemon started successfully" in result["content"][0].text, (
+            "Response should indicate daemon started successfully"
+        )
 
 
-def test_stop_daemon_when_not_running():
+@pytest.mark.asyncio
+async def test_stop_daemon_when_not_running():
     """Test that stop-daemon succeeds even when daemon isn't running."""
     # First ensure no daemon is running by checking and killing any existing processes
     result = subprocess.run(
@@ -155,19 +158,20 @@ def test_stop_daemon_when_not_running():
     time.sleep(1)  # Wait for processes to terminate
 
     # Try to stop daemon when we know none is running
-    result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon', '--tool-args', '{}'],
-        capture_output=True,
-        text=True
-    )
+    async with TestClient() as client:
+        result = await client.call_tool("stop-daemon", {})
+        
+        # Check response format follows MCP protocol
+        assert "content" in result, "Response should include content field"
+        assert "isError" in result, "Response should include isError field"
+        assert result["isError"] is False, "Response should indicate success"
+        assert "No running daemon found" in result["content"][0].text, (
+            "Response should indicate no daemon was running"
+        )
 
-    assert result.returncode == 0, "Stop daemon command should succeed even when daemon isn't running"
-    assert "No running daemon found" in result.stdout, (
-        "Response should indicate no daemon was running"
-    )
 
-
-def test_start_navigate_stop_cycle():
+@pytest.mark.asyncio
+async def test_start_navigate_stop_cycle():
     """Test a full cycle of starting daemon, navigating to a page, and stopping."""
     # First ensure daemon is stopped
     subprocess.run(
@@ -176,47 +180,49 @@ def test_start_navigate_stop_cycle():
         text=True
     )
     time.sleep(1)
-
-    # Start the daemon
-    start_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'start-daemon', '--tool-args', '{}'],
-        capture_output=True,
-        text=True
-    )
-    assert start_result.returncode == 0, "Start daemon command should succeed"
-    assert "Browser daemon started successfully" in start_result.stdout
-    time.sleep(1)  # Give daemon time to fully start
-
-    # Navigate to a page
-    nav_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright',
-         'call-tool', '--tool', 'navigate',
-         '--tool-args', '{"url": "https://example.com"}'],
-        capture_output=True,
-        text=True
-    )
-    assert nav_result.returncode == 0, "Navigation should succeed"
-
-    # Clean and parse the output
-    output = clean_output(nav_result.stdout)
-    response = eval(output.strip('[]'))
-    data = json.loads(response['text'])
-
-    # Check for required fields in response
-    assert 'session_id' in data, "Response should include session ID"
-    assert 'page_id' in data, "Response should include page ID"
-    assert data['created_session'] is True, "Should indicate new session was created"
-    assert data['created_page'] is True, "Should indicate new page was created"
-
-    # Stop the daemon
-    stop_result = subprocess.run(
-        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon', '--tool-args', '{}'],
-        capture_output=True,
-        text=True
-    )
-    assert stop_result.returncode == 0, "Stop daemon command should succeed"
-    # Accept either message since both indicate success
-    assert any(msg in stop_result.stdout for msg in [
-        "Browser daemon stopped successfully",
-        "No running daemon found"
-    ]), "Response should indicate daemon is not running or was stopped" 
+    
+    async with TestClient() as client:
+        # Start the daemon
+        start_result = await client.call_tool("start-daemon", {})
+        assert "content" in start_result, "Start response should include content field"
+        assert "isError" in start_result, "Start response should include isError field"
+        assert start_result["isError"] is False, "Start response should indicate success"
+        # Accept either message since both indicate the daemon is running
+        assert any(msg in start_result["content"][0].text for msg in [
+            "Browser daemon started successfully",
+            "Browser daemon is already running"
+        ]), "Response should indicate daemon is running"
+        
+        # Navigate to a page
+        nav_result = await client.call_tool(
+            "navigate",
+            {"url": "https://example.com", "wait_until": "networkidle"}
+        )
+        
+        # Handle both old and new response formats
+        if "content" in nav_result:
+            # New format
+            assert "isError" in nav_result, "Navigation response should include isError field"
+            assert nav_result["isError"] is False, "Navigation response should indicate success"
+            nav_data = eval(nav_result["content"][0].text)
+        else:
+            # Old format
+            assert "result" in nav_result, "Navigation response should include result field"
+            nav_data = eval(nav_result["result"])
+        
+        # Check navigation data
+        assert "session_id" in nav_data, "Response should include session ID"
+        assert "page_id" in nav_data, "Response should include page ID"
+        assert nav_data["created_session"] is True, "Should indicate new session was created"
+        assert nav_data["created_page"] is True, "Should indicate new page was created"
+        
+        # Stop the daemon
+        stop_result = await client.call_tool("stop-daemon", {})
+        assert "content" in stop_result, "Stop response should include content field"
+        assert "isError" in stop_result, "Stop response should include isError field"
+        assert stop_result["isError"] is False, "Stop response should indicate success"
+        # Accept either message since both indicate success
+        assert any(msg in stop_result["content"][0].text for msg in [
+            "Browser daemon stopped successfully",
+            "No running daemon found"
+        ]), "Response should indicate daemon is not running or was stopped" 

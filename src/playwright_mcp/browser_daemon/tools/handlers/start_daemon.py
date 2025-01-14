@@ -1,28 +1,25 @@
+from typing import Dict
 import asyncio
-import os
-import sys
-from typing import List
-from mcp.types import TextContent
-from ....utils.logging import setup_logging
+from .utils import create_response, check_daemon_running, start_daemon
 
 
-logger = setup_logging("start_daemon_handler")
-
-
-async def handle_start_daemon(args: dict = None) -> List[TextContent]:
-    """Handle the start-daemon tool request."""
+async def handle_start_daemon(arguments: Dict) -> Dict:
+    """Handle start-daemon command by starting the browser daemon if it's not running."""
     try:
-        # Start the daemon as a module in the background using nohup
-        os.system(f"nohup {sys.executable} -m playwright_mcp.browser_daemon.browser_manager > /dev/null 2>&1 &")
+        # Check if daemon is already running
+        if await check_daemon_running():
+            return create_response("Browser daemon is already running")
+            
+        # Start daemon
+        await start_daemon()
         
-        # Wait for daemon to start (max 5 seconds)
-        socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
+        # Wait for daemon to start (up to 5 seconds)
         for _ in range(10):
-            if os.path.exists(socket_path):
-                return [TextContent(type="text", text="Browser daemon started successfully")]
+            if await check_daemon_running():
+                return create_response("Browser daemon started successfully")
             await asyncio.sleep(0.5)
+            
+        return create_response("Failed to start browser daemon: timeout waiting for daemon to start", is_error=True)
         
-        raise Exception("Failed to start browser daemon (timeout)")
     except Exception as e:
-        logger.error(f"Failed to start daemon: {e}")
-        return [TextContent(type="text", text=f"Error: {str(e)}")] 
+        return create_response(f"Failed to start browser daemon: {str(e)}", is_error=True) 

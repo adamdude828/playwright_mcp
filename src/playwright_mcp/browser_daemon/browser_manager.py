@@ -121,6 +121,10 @@ class BrowserManager:
                     response = {"page_id": page_id}
             elif command == "execute-js":
                 response = await self.handle_execute_js(args)
+            elif command == "analyze-page":
+                response = await self.handle_analyze_page(args)
+            elif command == "explore-dom":
+                response = await self.handle_explore_dom(args)
             elif command == "close-browser":
                 session_id = args.get("session_id")
                 success = await self.close_browser(session_id)
@@ -137,11 +141,14 @@ class BrowserManager:
             else:
                 response = {"error": "unknown command"}
             
-            writer.write(json.dumps(response).encode() + b"\n")
+            # Ensure newlines in the response are properly escaped
+            response_json = json.dumps(response, ensure_ascii=False)
+            writer.write(response_json.encode() + b"\n")
             await writer.drain()
         except Exception as e:
             logger.error(f"Error handling connection: {e}")
-            writer.write(json.dumps({"error": str(e)}).encode() + b"\n")
+            error_json = json.dumps({"error": str(e)}, ensure_ascii=False)
+            writer.write(error_json.encode() + b"\n")
             await writer.drain()
         finally:
             writer.close()
@@ -177,25 +184,12 @@ class BrowserManager:
             # Navigate to URL and wait for network idle
             await page.goto(args["url"], wait_until="networkidle")
             
-            response = {
+            return {
                 "session_id": session_id,
                 "page_id": page_id,
                 "created_session": created_session,
                 "created_page": created_page
             }
-
-            # Take screenshot if path provided
-            if screenshot_path := args.get("screenshot_path"):
-                await page.screenshot(path=screenshot_path, full_page=True)
-                response["screenshot_path"] = screenshot_path
-
-            # If analysis is requested, perform it
-            if args.get("analyze_after_navigation"):
-                from .tools.page_analyzer import get_page_elements_map
-                elements_map = await get_page_elements_map(page)
-                response["analysis"] = elements_map
-
-            return response
         except Exception as e:
             logger.error(f"Navigation failed: {e}")
             return {"error": str(e)}
@@ -277,6 +271,43 @@ class BrowserManager:
             return {"result": result}
         except Exception as e:
             logger.error(f"JavaScript execution failed: {e}")
+            return {"error": str(e)}
+
+    async def handle_analyze_page(self, args: dict) -> dict:
+        """Handle analyze-page command by analyzing the current page."""
+        await self._update_activity()
+        
+        try:
+            page_id = args.get("page_id")
+            if not page_id or page_id not in self.active_pages:
+                return {"error": f"No page found for ID: {page_id}"}
+
+            page = self.active_pages[page_id]
+            
+            # Import here to avoid circular imports
+            from .tools.page_analyzer import get_page_elements_map
+            elements_map = await get_page_elements_map(page)
+            
+            return {"elements": elements_map}
+        except Exception as e:
+            logger.error(f"Page analysis failed: {e}")
+            return {"error": str(e)}
+
+    async def handle_explore_dom(self, args: dict) -> dict:
+        """Handle explore-dom command by exploring immediate children of a DOM element."""
+        try:
+            page_id = args.get("page_id")
+            if not page_id or page_id not in self.active_pages:
+                return {"error": f"No page found for ID: {page_id}"}
+
+            page = self.active_pages[page_id]
+            selector = args.get("selector", "body")
+            
+            # Import here to avoid circular imports
+            from .tools.page_analyzer import explore_dom
+            return await explore_dom(page, selector)
+        except Exception as e:
+            logger.error(f"DOM exploration failed: {e}")
             return {"error": str(e)}
 
 

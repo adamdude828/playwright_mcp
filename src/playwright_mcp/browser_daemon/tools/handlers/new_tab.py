@@ -1,10 +1,9 @@
-from typing import List
 from mcp.types import TextContent
 import traceback
 from .utils import send_to_manager, logger
 
 
-async def handle_new_tab(arguments: dict) -> List[TextContent]:
+async def handle_new_tab(arguments: dict) -> dict:
     """Handle new-tab tool."""
     logger.info(f"Handling new-tab request with args: {arguments}")
     try:
@@ -12,16 +11,33 @@ async def handle_new_tab(arguments: dict) -> List[TextContent]:
 
         if "error" in response:
             logger.error(f"New tab creation failed: {response['error']}")
-            raise ValueError(response["error"])
+            return {
+                "isError": True,
+                "content": [
+                    TextContent(
+                        type="text",
+                        text=response["error"]
+                    )
+                ]
+            }
 
-        logger.info("New tab created successfully")
-        return [
-            TextContent(
-                type="text",
-                text=f"Created new tab with ID: {response['page_id']}"
-            )
-        ]
+        return {
+            "content": [
+                TextContent(
+                    type="text",
+                    text=str(response)
+                )
+            ]
+        }
     except Exception as e:
         logger.error(f"Error in handle_new_tab: {e}")
         logger.error(traceback.format_exc())
-        raise 
+        return {
+            "isError": True,
+            "content": [
+                TextContent(
+                    type="text",
+                    text=str(e)
+                )
+            ]
+        } 
