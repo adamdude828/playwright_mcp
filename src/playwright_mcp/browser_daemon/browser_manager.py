@@ -121,8 +121,6 @@ class BrowserManager:
                     response = {"page_id": page_id}
             elif command == "execute-js":
                 response = await self.handle_execute_js(args)
-            elif command == "analyze-page":
-                response = await self.handle_analyze_page(args)
             elif command == "explore-dom":
                 response = await self.handle_explore_dom(args)
             elif command == "close-browser":
@@ -273,26 +271,6 @@ class BrowserManager:
             logger.error(f"JavaScript execution failed: {e}")
             return {"error": str(e)}
 
-    async def handle_analyze_page(self, args: dict) -> dict:
-        """Handle analyze-page command by analyzing the current page."""
-        await self._update_activity()
-        
-        try:
-            page_id = args.get("page_id")
-            if not page_id or page_id not in self.active_pages:
-                return {"error": f"No page found for ID: {page_id}"}
-
-            page = self.active_pages[page_id]
-            
-            # Import here to avoid circular imports
-            from .tools.page_analyzer import get_page_elements_map
-            elements_map = await get_page_elements_map(page)
-            
-            return {"elements": elements_map}
-        except Exception as e:
-            logger.error(f"Page analysis failed: {e}")
-            return {"error": str(e)}
-
     async def handle_explore_dom(self, args: dict) -> dict:
         """Handle explore-dom command by exploring immediate children of a DOM element."""
         try:
@@ -304,7 +282,7 @@ class BrowserManager:
             selector = args.get("selector", "body")
             
             # Import here to avoid circular imports
-            from .tools.page_analyzer import explore_dom
+            from .tools.dom_explorer import explore_dom
             return await explore_dom(page, selector)
         except Exception as e:
             logger.error(f"DOM exploration failed: {e}")
