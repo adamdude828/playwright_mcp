@@ -1,0 +1,1 @@
+"""Unit tests for the playwright_mcp package.""" 

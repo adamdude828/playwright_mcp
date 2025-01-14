@@ -199,18 +199,18 @@ def create_response(text: str | dict, is_error: bool = False) -> dict:
                 "isError": bool,
                 "content": [
                     {
-                        "type": "text" | "json",
+                        "type": "text",
                         "text": str
                     }
                 ]
             }
             
     Note:
-        Dictionary inputs are automatically serialized to JSON and marked with
-        type="json". All other inputs are converted to strings with type="text".
+        Dictionary inputs are automatically serialized to JSON strings.
+        All responses use type="text" as per MCP protocol requirements.
     """
     if isinstance(text, dict):
-        content = [TextContent(type="json", text=json.dumps(text, indent=2))]
+        content = [TextContent(type="text", text=json.dumps(text, indent=2))]
     else:
         content = [TextContent(type="text", text=str(text))]
         
