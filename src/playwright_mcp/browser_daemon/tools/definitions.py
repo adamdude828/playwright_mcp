@@ -145,7 +145,12 @@ def get_tool_definitions() -> list[Tool]:
         ),
         Tool(
             name="explore-dom",
-            description="Explore immediate children of a DOM element",
+            description=(
+                "Analyze and explore the DOM structure of a webpage by examining the immediate children of a "
+                "specified element. For each child element, returns: the HTML tag name (lowercase), element ID, "
+                "CSS classes, text content, and number of child elements it contains. Results are formatted in a "
+                "tree-like structure for easy visualization. If no selector is provided, defaults to 'body' element."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -155,7 +160,10 @@ def get_tool_definitions() -> list[Tool]:
                     },
                     "selector": {
                         "type": "string",
-                        "description": "CSS selector to filter elements"
+                        "description": (
+                            "CSS selector to target specific element (e.g. '#main', '.content', 'div.header'). "
+                            "Defaults to 'body' if not specified."
+                        )
                     }
                 },
                 "required": ["page_id"]
