@@ -112,20 +112,6 @@ def get_tool_definitions() -> list[Tool]:
             }
         ),
         Tool(
-            name="analyze-page",
-            description="Analyze the current page and return information about interactive elements",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "page_id": {
-                        "type": "string",
-                        "description": "Page ID to analyze"
-                    }
-                },
-                "required": ["page_id"]
-            }
-        ),
-        Tool(
             name="close-browser",
             description="Close a browser session and clean up resources",
             inputSchema={

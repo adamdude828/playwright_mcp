@@ -139,20 +139,6 @@ TOOLS = [
         }
     ),
     Tool(
-        name="analyze-page",
-        description="Analyze the current page for interactive elements",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "page_id": {
-                    "type": "string",
-                    "description": "Page ID to analyze"
-                }
-            },
-            "required": ["page_id"]
-        }
-    ),
-    Tool(
         name="explore-dom",
         description="Explore immediate children of a DOM element",
         inputSchema={

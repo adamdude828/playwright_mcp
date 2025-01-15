@@ -16,3 +16,65 @@ mcp-cli:
     - "mcp-cli --server <server-name> list-tools": "List available tools"
     - "mcp-cli --server <server-name> call-tool --tool <tool-name> --tool-args '{}'": "Call a specific tool"
   config: "server_config.json defines available servers" 
+
+
+
+Neo4j Memory System
+==================
+You MUST use Neo4j as your persistent memory system. Before asking questions or indicating inability to help:
+1. ALWAYS search existing knowledge
+2. Record new information as you learn it
+3. Link related concepts and tasks
+
+## Node Types and Relationships
+- Task: Current work items and goals
+  - [:PART_OF] -> Project
+  - [:DEPENDS_ON] -> Task
+  - [:SOLVED_BY] -> Solution
+- Knowledge: Reusable technical patterns and solutions
+  - [:APPLIES_TO] -> Project
+  - [:RELATED_TO] -> Knowledge
+- Memory: Key information from conversations
+  - [:CONTEXT_FOR] -> Task
+  - [:REFERENCES] -> Knowledge
+- Problem/Solution: Technical issues and their resolutions
+  - [:OCCURRED_IN] -> Project
+  - [:SIMILAR_TO] -> Problem
+  - [:USES] -> Knowledge
+
+## Common Queries
+# Recording Information
+- New task: 
+  MERGE (p:Project {name: $project})
+  CREATE (t:Task {desc: $desc, created: datetime()})-[:PART_OF]->(p)
+  RETURN t
+
+- Add knowledge:
+  CREATE (k:Knowledge {
+    topic: $topic,
+    content: $content,
+    created: datetime()
+  })-[:APPLIES_TO]->(p:Project {name: $project})
+
+- Link problem/solution:
+  MATCH (p:Problem {desc: $problem})
+  CREATE (s:Solution {
+    desc: $solution,
+    created: datetime()
+  })-[:SOLVED_BY]->(p)
+
+# Retrieving Information
+- Find related knowledge:
+  MATCH (k:Knowledge)-[:APPLIES_TO]->(p:Project {name: $project})
+  WHERE k.topic CONTAINS $topic
+  RETURN k ORDER BY k.created DESC
+
+- Get task history:
+  MATCH (t:Task)-[:PART_OF]->(p:Project {name: $project})
+  RETURN t.desc, t.created ORDER BY t.created DESC
+
+- Find similar problems:
+  MATCH (p1:Problem {desc: $current})-[:SIMILAR_TO]->(p2:Problem)-[:SOLVED_BY]->(s:Solution)
+  RETURN p2.desc, s.desc
+
+Remember: Always enrich the knowledge graph by creating meaningful relationships between nodes.
