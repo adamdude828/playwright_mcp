@@ -7,6 +7,7 @@ from .close_tab import handle_close_tab
 from .execute_js import handle_execute_js
 from .explore_dom import handle_explore_dom
 from .screenshot import handle_screenshot
+from .highlight_element import handle_highlight_element
 
 
 # Map of tool names to their handlers
@@ -20,4 +21,5 @@ TOOL_HANDLERS = {
     "execute-js": handle_execute_js,
     "explore-dom": handle_explore_dom,
     "screenshot": handle_screenshot,
+    "highlight-element": handle_highlight_element,
 }

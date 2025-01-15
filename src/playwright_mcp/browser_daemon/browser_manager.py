@@ -138,6 +138,8 @@ class BrowserManager:
                     response = {"success": True}
             elif command == "handle-screenshot":
                 response = await self.handle_screenshot(args)
+            elif command == "handle-highlight-element":
+                response = await self.handle_highlight_element(args)
             else:
                 response = {"error": "unknown command"}
             
@@ -314,6 +316,56 @@ class BrowserManager:
             return {"success": True, "path": save_path}
         except Exception as e:
             logger.error(f"Screenshot failed: {e}")
+            return {"error": str(e)}
+
+    async def handle_highlight_element(self, args: dict) -> dict:
+        """Handle highlight-element command by highlighting an element and returning its metrics."""
+        try:
+            page_id = args.get("page_id")
+            selector = args.get("selector")
+            style = args.get("style", "")
+            
+            if not page_id or not selector:
+                return {"error": "page_id and selector are required"}
+                
+            if page_id not in self.active_pages:
+                return {"error": "invalid page id"}
+                
+            page = self.active_pages[page_id]
+            
+            # Get element metrics using evaluate_handle for better argument passing
+            js_get_metrics = """(params) => {
+                const element = document.querySelector(params.selector);
+                if (!element) return null;
+                const rect = element.getBoundingClientRect();
+                return {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                    visible: window.getComputedStyle(element).display !== 'none'
+                };
+            }"""
+            
+            metrics = await page.evaluate(js_get_metrics, {"selector": selector})
+            
+            if not metrics:
+                return {"error": "element not found"}
+                
+            # Apply highlight style
+            js_highlight = """(params) => {
+                const element = document.querySelector(params.selector);
+                if (element) {
+                    element.style.cssText += params.style;
+                }
+            }"""
+            
+            await page.evaluate(js_highlight, {"selector": selector, "style": style})
+            
+            return {"metrics": metrics}
+            
+        except Exception as e:
+            logger.error(f"Error in handle_highlight_element: {e}")
             return {"error": str(e)}
 
 
