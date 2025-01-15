@@ -12,9 +12,9 @@ async def client():
         yield client
 
 
-def extract_page_id(response: dict) -> str:
+def extract_page_id(response: list) -> str:
     """Extract page ID from navigation response text."""
-    data = eval(response["result"])
+    data = eval(response[0].text)
     return data["page_id"]
 
 
@@ -39,10 +39,8 @@ async def test_explore_simple_page(client):
         }
     )
     
-    assert not explore_response.get("isError"), f"Exploration failed: {explore_response}"
-    
     # Verify response format and content
-    text = explore_response["content"][0].text
+    text = explore_response[0].text
     assert text.startswith("Element: body"), "Response should start with body element"
     assert "div" in text, "Response should contain div elements"
     assert "children)" in text, "Response should indicate child counts" 

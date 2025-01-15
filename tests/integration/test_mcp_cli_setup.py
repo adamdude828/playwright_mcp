@@ -132,10 +132,10 @@ async def test_start_daemon():
         result = await client.call_tool("start-daemon", {})
         
         # Check response format follows MCP protocol
-        assert "content" in result, "Response should include content field"
-        assert "isError" in result, "Response should include isError field"
-        assert result["isError"] is False, "Response should indicate success"
-        assert "Browser daemon started successfully" in result["content"][0].text, (
+        assert isinstance(result, list), "Result should be a list of content"
+        assert len(result) > 0, "Result should not be empty"
+        assert result[0].type == "text", "Content should be text type"
+        assert "Browser daemon started successfully" in result[0].text, (
             "Response should indicate daemon started successfully"
         )
 
@@ -162,10 +162,10 @@ async def test_stop_daemon_when_not_running():
         result = await client.call_tool("stop-daemon", {})
         
         # Check response format follows MCP protocol
-        assert "content" in result, "Response should include content field"
-        assert "isError" in result, "Response should include isError field"
-        assert result["isError"] is False, "Response should indicate success"
-        assert "No running daemon found" in result["content"][0].text, (
+        assert isinstance(result, list), "Result should be a list of content"
+        assert len(result) > 0, "Result should not be empty"
+        assert result[0].type == "text", "Content should be text type"
+        assert "No running daemon found" in result[0].text, (
             "Response should indicate no daemon was running"
         )
 
@@ -184,11 +184,11 @@ async def test_start_navigate_stop_cycle():
     async with TestClient() as client:
         # Start the daemon
         start_result = await client.call_tool("start-daemon", {})
-        assert "content" in start_result, "Start response should include content field"
-        assert "isError" in start_result, "Start response should include isError field"
-        assert start_result["isError"] is False, "Start response should indicate success"
+        assert isinstance(start_result, list), "Result should be a list of content"
+        assert len(start_result) > 0, "Result should not be empty"
+        assert start_result[0].type == "text", "Content should be text type"
         # Accept either message since both indicate the daemon is running
-        assert any(msg in start_result["content"][0].text for msg in [
+        assert any(msg in start_result[0].text for msg in [
             "Browser daemon started successfully",
             "Browser daemon is already running"
         ]), "Response should indicate daemon is running"
@@ -199,16 +199,9 @@ async def test_start_navigate_stop_cycle():
             {"url": "https://example.com", "wait_until": "networkidle"}
         )
         
-        # Handle both old and new response formats
-        if "content" in nav_result:
-            # New format
-            assert "isError" in nav_result, "Navigation response should include isError field"
-            assert nav_result["isError"] is False, "Navigation response should indicate success"
-            nav_data = eval(nav_result["content"][0].text)
-        else:
-            # Old format
-            assert "result" in nav_result, "Navigation response should include result field"
-            nav_data = eval(nav_result["result"])
+        assert isinstance(nav_result, list), "Result should be a list of content"
+        assert len(nav_result) > 0, "Result should not be empty"
+        nav_data = eval(nav_result[0].text)
         
         # Check navigation data
         assert "session_id" in nav_data, "Response should include session ID"
@@ -218,11 +211,9 @@ async def test_start_navigate_stop_cycle():
         
         # Stop the daemon
         stop_result = await client.call_tool("stop-daemon", {})
-        assert "content" in stop_result, "Stop response should include content field"
-        assert "isError" in stop_result, "Stop response should include isError field"
-        assert stop_result["isError"] is False, "Stop response should indicate success"
-        # Accept either message since both indicate success
-        assert any(msg in stop_result["content"][0].text for msg in [
-            "Browser daemon stopped successfully",
-            "No running daemon found"
-        ]), "Response should indicate daemon is not running or was stopped" 
+        assert isinstance(stop_result, list), "Result should be a list of content"
+        assert len(stop_result) > 0, "Result should not be empty"
+        assert stop_result[0].type == "text", "Content should be text type"
+        assert "Browser daemon stopped successfully" in stop_result[0].text, (
+            "Response should indicate daemon was stopped"
+        ) 

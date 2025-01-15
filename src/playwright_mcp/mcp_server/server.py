@@ -6,7 +6,6 @@ from mcp.server.stdio import stdio_server
 from ..browser_daemon.tools.definitions import get_tool_definitions
 from ..browser_daemon.tools.handlers import TOOL_HANDLERS
 from ..utils.logging import setup_logging
-from ..browser_daemon.tools.handlers.utils import create_response
 import asyncio
 import logging
 import sys
@@ -15,15 +14,15 @@ from mcp.types import Tool
 # Configure logging
 logger = setup_logging("mcp_server")
 
-print("Server module loaded!", file=sys.stderr)  # Immediate feedback
+logger.debug("Server module loaded!")
 
 # Initialize server
 server = Server("playwright")
 
-# Debug: Print available tools
+# Debug: Log available tools
 tools = get_tool_definitions()
-print(f"Available tools: {[t.name for t in tools]}", file=sys.stderr)
-print(f"Registered handlers: {list(TOOL_HANDLERS.keys())}", file=sys.stderr)
+logger.debug(f"Available tools: {[t.name for t in tools]}")
+logger.debug(f"Registered handlers: {list(TOOL_HANDLERS.keys())}")
 
 TOOLS = [
     Tool(
@@ -183,6 +182,11 @@ async def handle_list_tools() -> list[types.Tool]:
     return tools
 
 
+def is_mcp_content(item) -> bool:
+    """Check if an item is an MCP content type."""
+    return isinstance(item, (types.TextContent, types.ImageContent, types.EmbeddedResource))
+
+
 @server.call_tool()
 async def handle_call_tool(
     name: str,
@@ -194,29 +198,26 @@ async def handle_call_tool(
 
     if name not in TOOL_HANDLERS:
         logger.error(f"Unknown tool: {name}")
-        return create_response(f"Unknown tool: {name}")
+        return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
     try:
         result = await TOOL_HANDLERS[name](arguments or {})
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"Tool call successful - name: {name}, result: {result}")
             
-        # Check if the result indicates an error
-        if isinstance(result, dict) and result.get("isError"):
-            error_msg = result.get("content", [])[0]
-            if isinstance(error_msg, types.TextContent):
-                error_msg = error_msg.text
-            elif isinstance(error_msg, dict):
-                error_msg = error_msg.get("text", "Unknown error")
-            logger.error(f"Tool reported error - name: {name}, error: {error_msg}")
-            return create_response(error_msg)
-            
-        if isinstance(result, list):
+        # If result is already a list of MCP content types, return it directly
+        if isinstance(result, list) and all(is_mcp_content(item) for item in result):
             return result
-        return create_response(str(result))
+            
+        # If it's a string or other type, wrap it in TextContent
+        if not isinstance(result, list):
+            return [types.TextContent(type="text", text=str(result))]
+            
+        # Convert list items to TextContent if needed
+        return [types.TextContent(type="text", text=str(item)) for item in result]
     except Exception as e:
         logger.error(f"Tool call failed - name: {name}, error: {e}")
-        return create_response(str(e))
+        return [types.TextContent(type="text", text=str(e))]
 
 
 async def start_server():

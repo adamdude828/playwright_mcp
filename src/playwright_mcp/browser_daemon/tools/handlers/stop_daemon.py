@@ -1,17 +1,18 @@
-from typing import Dict
+from typing import Dict, List
 import asyncio
 import os
 import signal
 import subprocess
-from .utils import create_response, check_daemon_running
+from mcp.types import TextContent
+from .utils import check_daemon_running
 
 
-async def handle_stop_daemon(arguments: Dict) -> Dict:
+async def handle_stop_daemon(arguments: Dict) -> List[TextContent]:
     """Handle stop-daemon command by stopping the browser daemon if it's running."""
     try:
         # Check if daemon is running
         if not await check_daemon_running():
-            return create_response("No running daemon found")
+            return [TextContent(type="text", text="No running daemon found")]
             
         # Find and kill daemon process
         result = subprocess.run(
@@ -21,7 +22,7 @@ async def handle_stop_daemon(arguments: Dict) -> Dict:
         )
         
         if not result.stdout:
-            return create_response("No daemon process found")
+            return [TextContent(type="text", text="No daemon process found")]
             
         # Kill each matching process
         for pid in result.stdout.strip().split('\n'):
@@ -39,10 +40,10 @@ async def handle_stop_daemon(arguments: Dict) -> Dict:
                     os.unlink(socket_path)
                 except OSError:
                     pass
-                return create_response("Browser daemon stopped successfully")
+                return [TextContent(type="text", text="Browser daemon stopped successfully")]
             await asyncio.sleep(0.5)
             
-        return create_response("Failed to stop browser daemon: timeout waiting for daemon to stop", is_error=True)
+        return [TextContent(type="text", text="Failed to stop browser daemon: timeout waiting for daemon to stop")]
         
     except Exception as e:
-        return create_response(f"Failed to stop browser daemon: {str(e)}", is_error=True) 
+        return [TextContent(type="text", text=f"Failed to stop browser daemon: {str(e)}")] 

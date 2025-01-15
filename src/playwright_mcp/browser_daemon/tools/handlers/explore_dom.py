@@ -1,8 +1,9 @@
-from typing import Dict
-from .utils import create_response, send_to_manager
+from typing import Dict, List
+from mcp.types import TextContent
+from .utils import send_to_manager
 
 
-async def handle_explore_dom(arguments: Dict) -> Dict:
+async def handle_explore_dom(arguments: Dict) -> List[TextContent]:
     """Handle explore-dom command by exploring immediate children of a DOM element."""
     try:
         # Get page_id and selector from arguments
@@ -10,7 +11,7 @@ async def handle_explore_dom(arguments: Dict) -> Dict:
         selector = arguments.get("selector", "body")  # Default to body if no selector provided
         
         if not page_id:
-            return create_response("No page_id provided", is_error=True)
+            return [TextContent(type="text", text="No page_id provided")]
             
         response = await send_to_manager("explore-dom", {
             "page_id": page_id,
@@ -18,12 +19,12 @@ async def handle_explore_dom(arguments: Dict) -> Dict:
         })
         
         if "error" in response:
-            return create_response(f"Error: {response['error']}", is_error=True)
+            return [TextContent(type="text", text=f"Error: {response['error']}")]
             
         # Format the children info into a tree-like text structure
         children = response.get("children", [])
         if not children:
-            return create_response(f"No children found for selector: {selector}")
+            return [TextContent(type="text", text=f"No children found for selector: {selector}")]
             
         # Build output text
         lines = [f"Element: {selector}"]
@@ -41,7 +42,7 @@ async def handle_explore_dom(arguments: Dict) -> Dict:
                 child_info += f" ({child_count} children)"
             lines.append(f"{prefix}{child_info}{text_preview}")
             
-        return create_response("\n".join(lines))
+        return [TextContent(type="text", text="\n".join(lines))]
         
     except Exception as e:
-        return create_response(f"Error exploring DOM: {str(e)}", is_error=True) 
+        return [TextContent(type="text", text=f"Error exploring DOM: {str(e)}")] 

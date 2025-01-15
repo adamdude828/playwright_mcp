@@ -77,52 +77,56 @@ async def check_daemon_running() -> bool:
 
 
 async def start_daemon() -> None:
-    """Start the browser daemon if it's not running.
-    
-    Launches the browser daemon as a background process with the correct Python path.
-    The daemon process is started with stdout/stderr capture to detect immediate failures.
-    
-    Raises:
-        Exception: If the daemon fails to start or exits immediately
-        
-    Note:
-        This function modifies the PYTHONPATH to ensure the daemon can import
-        required modules. The daemon process continues running after this function returns.
-    """
+    """Start the browser daemon if it's not running."""
     logger.info("Starting browser daemon...")
     
-    # Get the current Python path
-    python_path = os.environ.get('PYTHONPATH', '')
-    
-    # Add the project root to PYTHONPATH if not already there
+    # Get the project root directory
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-    if project_root not in python_path:
-        python_path = f"{project_root}:{python_path}" if python_path else project_root
+    src_dir = os.path.join(project_root, 'src')
     
+    # Set up the Python path to include the src directory
     env = os.environ.copy()
-    env['PYTHONPATH'] = python_path
+    env['PYTHONPATH'] = src_dir
+    env['LOG_LEVEL'] = 'INFO'  # Use INFO level by default
     
-    # Start the daemon as a background process with output capture
-    process = subprocess.Popen(
-        [sys.executable, '-m', 'playwright_mcp.browser_daemon.browser_manager'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env
-    )
+    # Create logs directory if needed
+    logs_dir = os.path.join(project_root, 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
     
-    logger.info("Daemon start command issued")
-    
-    # Check the process hasn't immediately failed
+    # Start the daemon as a background process
     try:
-        retcode = process.wait(timeout=0.1)  # Wait briefly to catch immediate failures
-        stdout, stderr = process.communicate()
-        logger.error(f"Daemon failed to start. Exit code: {retcode}")
-        logger.error(f"Stdout: {stdout.decode()}")
-        logger.error(f"Stderr: {stderr.decode()}")
-        raise Exception("Daemon failed to start")
-    except subprocess.TimeoutExpired:
-        # Process is still running, which is what we want
-        pass
+        process = subprocess.Popen(
+            [sys.executable, '-m', 'playwright_mcp.browser_daemon.browser_manager'],
+            stdout=subprocess.DEVNULL,  # Don't capture output to avoid blocking
+            stderr=subprocess.DEVNULL,
+            env=env,
+            cwd=project_root
+        )
+        
+        logger.info("Daemon start command issued")
+        
+        # Give the process a moment to start
+        await asyncio.sleep(1)
+        
+        # Verify the process is still running
+        if process.poll() is not None:
+            raise Exception(f"Daemon process exited immediately with code {process.returncode}")
+            
+        # Wait for the socket to become available (up to 5 seconds)
+        socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
+        for _ in range(10):
+            if os.path.exists(socket_path):
+                # Verify we can connect
+                if await check_daemon_running():
+                    logger.info("Daemon started successfully")
+                    return
+            await asyncio.sleep(0.5)
+            
+        raise Exception("Daemon started but socket connection could not be established")
+            
+    except Exception as e:
+        logger.error(f"Error starting daemon: {str(e)}")
+        raise Exception(f"Failed to start daemon: {str(e)}")
 
 
 async def send_to_manager(command: str, args: dict) -> dict:

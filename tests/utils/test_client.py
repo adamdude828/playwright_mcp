@@ -9,8 +9,9 @@ This is a simplified MCP client for testing purposes. Unlike a full MCP client t
 This test client directly executes tool calls for testing, bypassing the LLM interaction.
 It uses the same tool handlers that would be available to a full MCP client.
 """
-import json
 from playwright_mcp.browser_daemon.tools.handlers import TOOL_HANDLERS
+from typing import List
+from mcp.types import TextContent
 
 
 class TestClient:
@@ -33,7 +34,7 @@ class TestClient:
         """Clean up the test client."""
         pass
         
-    async def call_tool(self, tool_name: str, tool_args: dict) -> dict:
+    async def call_tool(self, tool_name: str, tool_args: dict) -> List[TextContent]:
         """Execute an MCP tool call directly.
         
         Args:
@@ -41,23 +42,13 @@ class TestClient:
             tool_args: Arguments to pass to the tool
             
         Returns:
-            The tool's response data
+            List[TextContent]: The tool's response as a list of TextContent objects
         """
         handler = TOOL_HANDLERS[tool_name]
         response = await handler(tool_args)
         
-        # Handle TextContent responses from the MCP server
-        if isinstance(response, list) and len(response) > 0:
-            if hasattr(response[0], 'text'):
-                text = response[0].text
-                try:
-                    # Try to parse as JSON first
-                    response_data = json.loads(text)
-                    if "error" in response_data:
-                        raise RuntimeError(response_data["error"])
-                    return response_data
-                except json.JSONDecodeError:
-                    # If not JSON, return as plain text
-                    return {"result": text}
+        # Ensure response is always a list of TextContent
+        if not isinstance(response, list):
+            return [TextContent(type="text", text=str(response))]
             
         return response 

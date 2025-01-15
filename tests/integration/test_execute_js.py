@@ -1,6 +1,5 @@
 """Integration tests for the execute-js functionality."""
 import pytest
-import ast
 from tests.utils.test_client import TestClient
 
 
@@ -22,7 +21,7 @@ async def browser_page(client):
     result = await client.call_tool("navigate", {"url": "about:blank"})
     
     # Parse the nested response data
-    response_data = ast.literal_eval(result["result"])
+    response_data = eval(result[0].text)
     
     yield {
         "session_id": response_data["session_id"],
@@ -43,7 +42,7 @@ async def test_execute_simple_js(client, browser_page):
     })
     
     # Get the text content from the response
-    assert result["content"][0].text == "4"
+    assert result[0].text == "4"
 
 
 @pytest.mark.asyncio
@@ -67,7 +66,7 @@ async def test_execute_complex_js(client, browser_page):
     })
     
     # Get the text content from the response
-    assert result["content"][0].text == "2"
+    assert result[0].text == "2"
 
 
 @pytest.mark.asyncio
@@ -80,8 +79,7 @@ async def test_execute_js_with_invalid_session(client, browser_page):
     })
     
     # Check for error in the response
-    assert result["isError"] is True
-    assert "No browser session found for ID: invalid-session" in result["content"][0].text
+    assert "No browser session found for ID: invalid-session" in result[0].text
 
 
 @pytest.mark.asyncio
@@ -94,8 +92,7 @@ async def test_execute_js_with_invalid_page(client, browser_page):
     })
     
     # Check for error in the response
-    assert result["isError"] is True
-    assert "No page found for ID: invalid-page" in result["content"][0].text
+    assert "No page found for ID: invalid-page" in result[0].text
 
 
 @pytest.mark.asyncio
@@ -108,5 +105,4 @@ async def test_execute_invalid_js(client, browser_page):
     })
     
     # Check for error in the response
-    assert result["isError"] is True
-    assert "SyntaxError: Unexpected identifier 'javascript'" in result["content"][0].text 
+    assert "SyntaxError: Unexpected identifier 'javascript'" in result[0].text 
