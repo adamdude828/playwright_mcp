@@ -12,7 +12,7 @@ async def main():
     """Start and run the browser manager."""
     logger.info("Starting browser manager")
     manager = BrowserManager()
-    await manager.start_server()
+    await manager.start()
     logger.info("Browser manager started")
 
 

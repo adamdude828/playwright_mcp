@@ -13,7 +13,7 @@ class DOMHandler(BaseHandler):
         super().__init__(session_manager)
         self.required_execute_js_args = ["session_id", "page_id", "script"]
         self.required_explore_dom_args = ["page_id"]
-        self.required_search_dom_args = ["page_id", "search_text"]
+        self.required_search_dom_args = ["page_id"]
 
     async def handle(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle DOM-related commands."""
@@ -73,102 +73,175 @@ class DOMHandler(BaseHandler):
 
     async def _handle_search_dom(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle search-dom command."""
-        # Validate required arguments
-        if not args or "search_text" not in args:
-            return {"error": "Missing required arguments: search_text"}
-
+        # Validate page_id (only required parameter)
         page_id = args.get("page_id")
         if not page_id:
-            return {"error": "Missing required arguments: page_id"}
+            return {"error": "Missing required arguments for DOM search"}
 
         page = self.session_manager.get_page(page_id)
         if not page:
             return {"error": f"No page found with ID: {page_id}"}
 
         try:
-            # Get page content and parse with BeautifulSoup
+            # Get page content and parse with BeautifulSoup using lxml parser
             content = await page.content()
-            soup = BeautifulSoup(content, 'html.parser')
+            logger.debug(f"Got page content of length: {len(content)}")
+            logger.debug(f"Page content preview: {content[:500]}")
+            
+            try:
+                soup = BeautifulSoup(content, 'lxml')
+                logger.debug("Successfully parsed with lxml parser")
+                logger.debug(f"Found tags: {[tag.name for tag in soup.find_all()][:10]}")
+            except Exception as parse_error:
+                logger.error(f"Failed to parse with lxml: {parse_error}")
+                try:
+                    # Fallback to html.parser with explicit encoding
+                    soup = BeautifulSoup(content, 'html.parser', from_encoding='utf-8')
+                    logger.debug("Successfully parsed with html.parser")
+                except Exception as html_parse_error:
+                    logger.error(f"Failed to parse with html.parser: {html_parse_error}")
+                    return {"error": f"Failed to parse HTML content: {html_parse_error}"}
+
             matches = []
-            search_text = args["search_text"].lower()
+            # Get search criteria
+            search_text = args.get("search_text", "").lower()
+            search_tag = args.get("search_tag", "").lower()
+            search_class = args.get("search_class", "").lower()
+            search_id = args.get("search_id", "").lower()
+            search_attribute = args.get("search_attribute", {})
 
-            # Helper function to get element path
-            def get_element_path(element):
-                path = []
-                current = element
-                while current and current.name:
-                    siblings = [s for s in current.parent.children if s.name == current.name] if current.parent else []
-                    position = siblings.index(current) + 1 if siblings else 1
-                    path.append(f"{current.name}[{position}]")
-                    current = current.parent
-                path.reverse()
-                return '/[document][0]/' + '/'.join(path)
+            logger.debug(
+                f"Searching with criteria - text: {search_text}, tag: {search_tag}, "
+                f"class: {search_class}, id: {search_id}, attribute: {search_attribute}"
+            )
 
-            # Helper function to check if element has matching text
-            def has_matching_text(element):
-                return bool(element.string and search_text in element.string.lower())
+            try:
+                # Helper function to get element path
+                def get_element_path(element):
+                    try:
+                        path = []
+                        current = element
+                        while current and current.name:
+                            siblings = []
+                            if current.parent:
+                                siblings = [s for s in current.parent.children if s.name == current.name]
+                            position = siblings.index(current) + 1 if siblings else 1
+                            path.append(f"{current.name}[{position}]")
+                            current = current.parent
+                        path.reverse()
+                        return '/[document][0]/' + '/'.join(path)
+                    except Exception as path_error:
+                        logger.error(f"Error getting element path: {path_error}")
+                        return "unknown_path"
 
-            # Search for elements with matching ID
-            for element in soup.find_all():
-                if element.get('id') and search_text in element.get('id').lower():
-                    matches.append({
-                        "type": "id",
-                        "tag": element.name,
-                        "id": element.get("id"),
-                        "path": get_element_path(element)
-                    })
+                # If only searching by tag, use direct find_all
+                if search_tag and not any([search_text, search_class, search_id, search_attribute]):
+                    logger.debug(f"Performing tag-only search for: {search_tag}")
+                    elements = soup.find_all(search_tag)
+                    logger.debug(f"Found {len(elements)} elements with tag {search_tag}")
+                    for element in elements:
+                        match_info = {
+                            "type": "tag",
+                            "tag": element.name,
+                            "path": get_element_path(element),
+                            "text": element.get_text(strip=True),
+                            "attributes": element.attrs
+                        }
+                        matches.append(match_info)
+                    logger.debug(f"Processed {len(matches)} tag matches")
+                    return {
+                        "matches": matches,
+                        "total": len(matches)
+                    }
 
-            # Search for elements with matching class
-            for element in soup.find_all(class_=True):
-                if any(search_text in c.lower() for c in element.get('class', [])):
-                    matches.append({
-                        "type": "class",
-                        "tag": element.name,
-                        "classes": element.get("class"),
-                        "path": get_element_path(element)
-                    })
+                # Search for elements matching any of the criteria
+                for element in soup.find_all():
+                    try:
+                        logger.debug(f"Found element: {element.name}")
+                        
+                        # Skip if tag doesn't match when search_tag is specified
+                        if search_tag and element.name.lower() != search_tag:
+                            continue
 
-            # Search for elements with matching attributes
-            for element in soup.find_all():
-                for attr, value in element.attrs.items():
-                    if attr not in ["id", "class"]:  # Skip id and class as they're handled separately
-                        # Handle both string values and lists of strings
-                        if isinstance(value, str):
-                            # Check both attribute name and value
-                            if search_text in attr.lower() or search_text in value.lower():
-                                matches.append({
-                                    "type": "attribute",
-                                    "tag": element.name,
-                                    "attribute": attr,
-                                    "value": value,
-                                    "path": get_element_path(element)
+                        # Base match info
+                        match_info = {
+                            "type": None,
+                            "tag": element.name,
+                            "path": get_element_path(element),
+                            "attributes": element.attrs
+                        }
+
+                        # If we have a tag match, add it first
+                        if search_tag and element.name.lower() == search_tag:
+                            tag_match = match_info.copy()
+                            tag_match.update({
+                                "type": "tag",
+                                "text": element.get_text(strip=True)
+                            })
+                            matches.append(tag_match)
+
+                        # Check ID
+                        if search_text and element.get('id', ''):
+                            element_id = element.get('id', '').lower()
+                            if search_text in element_id:
+                                match_info.update({
+                                    "type": "id",
+                                    "id": element.get('id'),
+                                    "text": element.get_text(strip=True)
                                 })
-                        elif isinstance(value, list):
-                            # Handle list of values (like multiple data attributes)
-                            for v in value:
-                                if isinstance(v, str) and (search_text in attr.lower() or search_text in v.lower()):
-                                    matches.append({
-                                        "type": "attribute",
-                                        "tag": element.name,
-                                        "attribute": attr,
-                                        "value": v,
-                                        "path": get_element_path(element)
-                                    })
+                                matches.append(match_info.copy())
 
-            # Search for elements with matching text content
-            for element in soup.find_all(string=True):
-                if element.strip() and search_text in element.lower():
-                    matches.append({
-                        "type": "text",
-                        "tag": element.parent.name,
-                        "text": str(element).strip(),
-                        "path": get_element_path(element.parent)
-                    })
+                        # Check classes
+                        if search_text and element.get('class'):
+                            element_classes = element.get('class', [])
+                            if any(search_text in c.lower() for c in element_classes):
+                                match_info.update({
+                                    "type": "class",
+                                    "classes": element_classes,
+                                    "text": element.get_text(strip=True)
+                                })
+                                matches.append(match_info.copy())
 
-            return {
-                "matches": matches,
-                "total": len(matches)
-            }
+                        # Check other attributes
+                        if search_text:
+                            logger.debug(f"Checking attributes for element {element.name}")
+                            for attr, value in element.attrs.items():
+                                if attr not in ['id', 'class']:
+                                    attr_value = str(value).lower()
+                                    if search_text in attr or search_text in attr_value:
+                                        logger.debug(f"Found attribute match: {attr}={value}")
+                                        match_info.update({
+                                            "type": "attribute",
+                                            "attribute": attr,
+                                            "value": value,
+                                            "text": element.get_text(strip=True)
+                                        })
+                                        matches.append(match_info.copy())
+
+                        # Check text content
+                        if search_text:
+                            element_text = element.get_text(strip=True).lower()
+                            if search_text in element_text:
+                                match_info.update({
+                                    "type": "text",
+                                    "text": element_text
+                                })
+                                matches.append(match_info.copy())
+
+                    except Exception as element_error:
+                        logger.error(f"Error processing element: {element_error}")
+                        continue
+
+                logger.debug(f"Found {len(matches)} matches")
+                return {
+                    "matches": matches,
+                    "total": len(matches)
+                }
+
+            except Exception as search_error:
+                logger.error(f"Error during DOM search: {search_error}")
+                return {"error": f"Error during DOM search: {search_error}"}
 
         except Exception as e:
+            logger.error(f"Error in _handle_search_dom: {e}")
             return {"error": str(e)} 

@@ -352,4 +352,201 @@ async def test_search_dom_with_list_attributes(dom_handler, mock_page):
         m["attribute"] == "data-test" and "test-value" in str(m["value"])
         for m in attribute_matches
     )
+
+
+@pytest.mark.asyncio
+async def test_search_dom_with_complex_html():
+    """Test search-dom with HTML containing special characters and nested quotes."""
+    # Mock complex HTML content similar to Google's homepage
+    complex_html = '''
+        <html>
+            <body>
+                <div class="main">
+                    <input name="q" type="text" title="Search" 
+                           aria-label="Search" data-ved="complex\"quoted'value">
+                    <div class="nested" data-json='{"key": "value"}'>
+                        <span>Text with "quotes" and 'apostrophes'</span>
+                    </div>
+                    <script>
+                        var config = {
+                            "searchBox": "complex\\"value",
+                            'data': 'more\\'data'
+                        };
+                    </script>
+                </div>
+            </body>
+        </html>
+    '''
+    
+    mock_session_manager = MagicMock()
+    mock_page = AsyncMock()
+    mock_page.content.return_value = complex_html
+    mock_session_manager.get_page.return_value = mock_page
+    
+    handler = DOMHandler(mock_session_manager)
+    
+    # Test 1: Search by tag only
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_tag": "input"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert len(result["matches"]) == 1
+    assert result["matches"][0]["type"] == "tag"
+    assert result["matches"][0]["tag"] == "input"
+    
+    # Test 2: Search by text only
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "Search"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert len(result["matches"]) > 0
+    # Should find matches in attributes (title, aria-label)
+    assert any(m["type"] == "attribute" for m in result["matches"])
+    
+    # Test 3: Search by attribute value
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "complex"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert len(result["matches"]) > 0
+    assert any(m["type"] == "attribute" and "complex" in str(m.get("value", "")) for m in result["matches"])
+    
+    # Test 4: Search with multiple criteria
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_tag": "input",
+        "search_text": "Search"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert len(result["matches"]) > 0
+    
+    # Debug: Print all matches
+    print("\nTest 4 matches:")
+    for m in result["matches"]:
+        print(f"Match: {m}")
+    
+    # Should find input elements that have "Search" in their attribute values or text
+    assert any(
+        m["tag"] == "input" and (
+            (m["type"] == "attribute" and "Search" in str(m.get("value", ""))) or
+            "Search" in str(m.get("text", ""))
+        ) for m in result["matches"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_search_dom_special_characters():
+    """Test search-dom with various special character scenarios."""
+    # HTML with various special characters and escape sequences
+    html_content = '''
+        <html>
+            <body>
+                <!-- Test quotes and apostrophes -->
+                <div id="test'id" class="test\"class">
+                    <span title='Single "quotes"'>Mixed "quotes' and 'quotes"</span>
+                </div>
+                
+                <!-- Test special characters -->
+                <div data-special="&lt;&gt;&amp;&#34;&#39;">
+                    <p>Special chars: © ® ™ € £ ¥</p>
+                </div>
+                
+                <!-- Test Unicode characters -->
+                <div class="unicode-test">
+                    <p>Unicode: 你好 안녕하세요 こんにちは</p>
+                    <span title="emoji-test">Emojis: 😀 🌟 🎉</span>
+                </div>
+                
+                <!-- Test JavaScript-like content -->
+                <script type="text/javascript">
+                    var config = {
+                        "key": "value with \"quotes\"",
+                        'key2': 'value with \'quotes\''
+                    };
+                </script>
+                
+                <!-- Test JSON-like attributes -->
+                <div data-json='{"key": "value", "nested": {"key2": "value2"}}'>
+                    <span data-complex="{&quot;escaped&quot;: &quot;json&quot;}">
+                        Text with backslashes: C:\\path\\to\\file
+                    </span>
+                </div>
+            </body>
+        </html>
+    '''
+    
+    mock_session_manager = MagicMock()
+    mock_page = AsyncMock()
+    mock_page.content.return_value = html_content
+    mock_session_manager.get_page.return_value = mock_page
+    
+    handler = DOMHandler(mock_session_manager)
+    
+    # Test 1: Search elements with quoted attributes
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_tag": "div",
+        "search_text": "test"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    
+    # Debug: Print all matches from Test 1
+    print("\nTest 1 matches:")
+    for m in result["matches"]:
+        print(f"Match: {m}")
+    
+    assert any(m["type"] == "tag" and m["tag"] == "div" for m in result["matches"])
+    
+    # Test 2: Search for Unicode content
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "你好"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert any("你好" in str(m.get("text", "")) for m in result["matches"])
+    
+    # Test 3: Search elements with JSON attributes
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "nested"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert any('nested' in str(m.get("attributes", {})) for m in result["matches"])
+    
+    # Test 4: Search for decoded HTML entities
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "<"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert any("<" in str(m.get("attributes", {})) for m in result["matches"])
+    
+    # Test 5: Search for backslash content
+    result = await handler._handle_search_dom({
+        "page_id": "test_page",
+        "search_text": "path"
+    })
+    
+    assert "error" not in result
+    assert result["matches"]
+    assert any('path' in str(m.get("text", "")) for m in result["matches"])
  

@@ -1,52 +1,43 @@
 """Centralized logging configuration."""
 import logging
-import logging.handlers
 import os
+import sys
+from pathlib import Path
 
 
-def setup_logging(logger_name: str) -> logging.Logger:
-    """Set up logging configuration.
-    
-    Args:
-        logger_name: Name of the logger
-        
-    Returns:
-        Configured logger instance
-        
-    The logging level is controlled by the LOG_LEVEL environment variable.
-    Defaults to ERROR if not set.
-    """
+def setup_logging(name: str) -> logging.Logger:
+    """Set up logging configuration."""
     # Create logs directory if it doesn't exist
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    # Get or create logger
-    logger = logging.getLogger(logger_name)
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
     
-    # Set level based on environment variable
-    level = os.getenv("LOG_LEVEL", "ERROR")
-    level = getattr(logging, level.upper())
-    logger.setLevel(level)
-    
-    # Avoid duplicate handlers
-    if not logger.handlers:
-        # File handler with rotation
-        file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(log_dir, f"{logger_name}.log"),
-            maxBytes=10*1024*1024,  # 10MB
-            backupCount=5
-        )
-        file_handler.setFormatter(
-            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        )
-        logger.addHandler(file_handler)
+    # Configure logging
+    logger = logging.getLogger(name)
+    logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(
-            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        )
-        logger.addHandler(console_handler)
+    # File handler for debug logs
+    debug_handler = logging.FileHandler(log_dir / "debug.log")
+    debug_handler.setLevel(logging.DEBUG)
+    debug_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    debug_handler.setFormatter(debug_formatter)
+    logger.addHandler(debug_handler)
+
+    # File handler for errors
+    error_handler = logging.FileHandler(log_dir / "error.log")
+    error_handler.setLevel(logging.ERROR)
+    error_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s\n%(pathname)s:%(lineno)d\n'
+    )
+    error_handler.setFormatter(error_formatter)
+    logger.addHandler(error_handler)
+
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
+    console_formatter = logging.Formatter('%(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
 
     return logger 

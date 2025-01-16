@@ -4,7 +4,7 @@ from playwright_mcp.mcp_server.tools.base import ToolHandler
 
 class SearchDOMHandler(ToolHandler):
     name = "search-dom"
-    description = "Search the DOM for elements matching specific criteria including tags, IDs, classes, and attributes"
+    description = "Search for DOM elements matching specific criteria like text content, tag name, or attributes"
 
     async def validate_args(self, args: Dict[str, Any]) -> bool:
         """Validate the incoming arguments for the search-dom tool."""
@@ -12,17 +12,19 @@ class SearchDOMHandler(ToolHandler):
             return False
         
         # Check required arguments
-        if "query" not in args or not isinstance(args["query"], str):
-            return False
         if "page_id" not in args or not isinstance(args["page_id"], str):
             return False
             
         # Validate optional arguments if present
-        if "visible_only" in args and not isinstance(args["visible_only"], bool):
+        if "text" in args and not isinstance(args["text"], str):
             return False
-        if "max_results" in args and not isinstance(args["max_results"], int):
+        if "tag" in args and not isinstance(args["tag"], str):
             return False
-        if "include_html" in args and not isinstance(args["include_html"], bool):
+        if "class_name" in args and not isinstance(args["class_name"], str):
+            return False
+        if "id" in args and not isinstance(args["id"], str):
+            return False
+        if "attribute" in args and not isinstance(args["attribute"], dict):
             return False
             
         return True
@@ -30,23 +32,10 @@ class SearchDOMHandler(ToolHandler):
     async def handle(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle the search-dom tool request."""
         try:
-            # Extract and process arguments
-            query = args["query"]
-            page_id = args["page_id"]
-            visible_only = args.get("visible_only", True)
-            max_results = args.get("max_results", 100)
-            include_html = args.get("include_html", False)
-
-            # Forward request to daemon
+            # Forward request to daemon with same parameter names
             response = await self.send_to_daemon({
-                "command": "handle-search-dom",
-                "args": {
-                    "query": query,
-                    "page_id": page_id,
-                    "visible_only": visible_only,
-                    "max_results": max_results,
-                    "include_html": include_html
-                }
+                "command": "search-dom",
+                "args": args
             })
 
             # Process daemon response
@@ -59,7 +48,7 @@ class SearchDOMHandler(ToolHandler):
             return {
                 "status": "success",
                 "matches": response.get("matches", []),
-                "total_matches": response.get("total_matches", 0)
+                "total": response.get("total", 0)
             }
 
         except Exception as e:
