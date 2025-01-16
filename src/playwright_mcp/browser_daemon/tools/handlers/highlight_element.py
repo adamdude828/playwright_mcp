@@ -3,6 +3,7 @@ from mcp.types import TextContent
 from .utils import send_to_manager, logger
 import traceback
 import pathlib
+import os
 
 
 async def handle_highlight_element(arguments: Dict) -> Dict:
@@ -24,13 +25,25 @@ async def handle_highlight_element(arguments: Dict) -> Dict:
                     )
                 ]
             }
+        
+        # Validate absolute path
+        if not os.path.isabs(save_path):
+            return {
+                "isError": True,
+                "content": [
+                    TextContent(
+                        type="text",
+                        text="save_path must be an absolute path"
+                    )
+                ]
+            }
             
         # Ensure the directory exists
         save_path = pathlib.Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
             
         # First, get element info and add highlight
-        response = await send_to_manager("handle-highlight-element", {
+        response = await send_to_manager("highlight-element", {
             "page_id": page_id,
             "selector": selector,
             "style": """
@@ -52,7 +65,7 @@ async def handle_highlight_element(arguments: Dict) -> Dict:
             }
         
         # Take screenshot of the area
-        screenshot_response = await send_to_manager("handle-screenshot", {
+        screenshot_response = await send_to_manager("screenshot", {
             "page_id": page_id,
             "selector": selector,
             "padding": 50,  # Add padding around the element for context

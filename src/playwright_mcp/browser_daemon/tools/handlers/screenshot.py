@@ -7,7 +7,7 @@ async def handle_screenshot(arguments: dict) -> dict:
     """Handle screenshot tool."""
     logger.info(f"Handling screenshot request with args: {arguments}")
     try:
-        response = await send_to_manager("handle-screenshot", arguments)
+        response = await send_to_manager("screenshot", arguments)
 
         if "error" in response:
             logger.error(f"Screenshot failed: {response['error']}")
