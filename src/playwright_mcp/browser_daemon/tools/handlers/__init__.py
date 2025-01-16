@@ -8,6 +8,7 @@ from .execute_js import handle_execute_js
 from .explore_dom import handle_explore_dom
 from .screenshot import handle_screenshot
 from .highlight_element import handle_highlight_element
+from .search_dom import handle_search_dom
 
 
 # Map of tool names to their handlers
@@ -22,4 +23,5 @@ TOOL_HANDLERS = {
     "explore-dom": handle_explore_dom,
     "screenshot": handle_screenshot,
     "highlight-element": handle_highlight_element,
+    "search-dom": handle_search_dom,
 }

@@ -1,243 +1,145 @@
 """Unit tests for SessionManager class."""
 import pytest
-from unittest.mock import Mock, AsyncMock
-from playwright_mcp.browser_daemon.session import SessionManager
+from unittest.mock import AsyncMock, MagicMock
+from playwright.async_api import Browser, Page
+from playwright_mcp.browser_daemon.core.session import SessionManager, session_manager
 
 
 @pytest.fixture
-def session_manager():
-    """Create a fresh SessionManager instance for each test."""
-    return SessionManager()
-
-
-@pytest.fixture
-def mock_playwright():
-    """Create a mock Playwright instance."""
-    mock = AsyncMock()
-    mock.stop = AsyncMock()
-    return mock
-
-
-@pytest.fixture
-def mock_browser_context():
-    """Create a mock BrowserContext instance."""
-    mock = AsyncMock()
-    mock.close = AsyncMock()
-    return mock
+def mock_browser():
+    """Create a mock browser instance."""
+    browser = MagicMock(spec=Browser)
+    browser.close = AsyncMock()
+    return browser
 
 
 @pytest.fixture
 def mock_page():
-    """Create a mock Page instance."""
-    mock = AsyncMock()
-    mock.close = AsyncMock()
-    mock.context = None  # Will be set in tests that need it
-    return mock
+    """Create a mock page instance."""
+    page = MagicMock(spec=Page)
+    page.close = AsyncMock()
+    return page
 
 
-def test_add_session(session_manager, mock_playwright, mock_browser_context):
-    """Test adding a new browser session."""
-    session_id = "test_session"
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
+@pytest.fixture
+def session_mgr(mock_browser, mock_page):
+    """Get a clean session manager instance for each test."""
+    mgr = SessionManager()
+    mgr.sessions.clear()
+    mgr.pages.clear()
+    mgr.playwright = None
+    mgr._initialized = True
     
-    assert session_manager.active_playwright[session_id] == mock_playwright
-    assert session_manager.active_contexts[session_id] == mock_browser_context
-
-
-def test_add_page(session_manager, mock_page):
-    """Test adding a new page."""
-    page_id = "test_page"
-    session_manager.add_page(page_id, mock_page)
+    # Setup mock for browser launch
+    async def mock_launch(browser_type: str, headless: bool):
+        return mock_browser
     
-    assert session_manager.active_pages[page_id] == mock_page
-
-
-def test_get_context_invalid_session(session_manager):
-    """Test getting context with invalid session ID raises ValueError."""
-    with pytest.raises(ValueError, match="No browser session found for ID: invalid_session"):
-        session_manager.get_context("invalid_session")
-
-
-def test_get_page_invalid_page(session_manager):
-    """Test getting page with invalid page ID raises ValueError."""
-    with pytest.raises(ValueError, match="No page found for ID: invalid_page"):
-        session_manager.get_page("invalid_page")
-
-
-def test_get_playwright_invalid_session(session_manager):
-    """Test getting playwright with invalid session ID raises ValueError."""
-    with pytest.raises(ValueError, match="No playwright instance found for ID: invalid_session"):
-        session_manager.get_playwright("invalid_session")
-
-
-def test_successful_get_context(session_manager, mock_playwright, mock_browser_context):
-    """Test successful retrieval of browser context."""
-    session_id = "test_session"
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
+    # Setup mock for page creation
+    async def mock_new_page():
+        return mock_page
+        
+    mock_browser.new_page = mock_new_page
+    mgr._launch_browser = AsyncMock(side_effect=mock_launch)
     
-    retrieved_context = session_manager.get_context(session_id)
-    assert retrieved_context == mock_browser_context
-
-
-def test_successful_get_page(session_manager, mock_page):
-    """Test successful retrieval of page."""
-    page_id = "test_page"
-    session_manager.add_page(page_id, mock_page)
-    
-    retrieved_page = session_manager.get_page(page_id)
-    assert retrieved_page == mock_page
-
-
-def test_successful_get_playwright(session_manager, mock_playwright, mock_browser_context):
-    """Test successful retrieval of playwright instance."""
-    session_id = "test_session"
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
-    
-    retrieved_playwright = session_manager.get_playwright(session_id)
-    assert retrieved_playwright == mock_playwright
-
-
-def test_multiple_sessions(session_manager, mock_playwright, mock_browser_context):
-    """Test managing multiple sessions."""
-    # Create multiple mock instances
-    mock_playwright2 = Mock()
-    mock_context2 = Mock()
-    
-    # Add multiple sessions
-    session_manager.add_session("session1", mock_playwright, mock_browser_context)
-    session_manager.add_session("session2", mock_playwright2, mock_context2)
-    
-    # Verify both sessions are stored correctly
-    assert session_manager.get_context("session1") == mock_browser_context
-    assert session_manager.get_context("session2") == mock_context2
-    assert session_manager.get_playwright("session1") == mock_playwright
-    assert session_manager.get_playwright("session2") == mock_playwright2
-
-
-def test_multiple_pages(session_manager, mock_page):
-    """Test managing multiple pages."""
-    # Create multiple mock pages
-    mock_page2 = Mock()
-    
-    # Add multiple pages
-    session_manager.add_page("page1", mock_page)
-    session_manager.add_page("page2", mock_page2)
-    
-    # Verify both pages are stored correctly
-    assert session_manager.get_page("page1") == mock_page
-    assert session_manager.get_page("page2") == mock_page2
-
-
-def test_empty_session_id(session_manager, mock_playwright, mock_browser_context):
-    """Test handling empty session ID."""
-    session_id = ""
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
-    
-    # Should still work with empty string as key
-    assert session_manager.get_context(session_id) == mock_browser_context
-    assert session_manager.get_playwright(session_id) == mock_playwright
-
-
-def test_special_chars_session_id(session_manager, mock_playwright, mock_browser_context):
-    """Test handling session ID with special characters."""
-    session_id = "test@#$%^&*()_+"
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
-    
-    # Should work with special characters
-    assert session_manager.get_context(session_id) == mock_browser_context
-    assert session_manager.get_playwright(session_id) == mock_playwright
+    return mgr
 
 
 @pytest.mark.asyncio
-async def test_close_session_invalid_id(session_manager):
-    """Test closing non-existent session raises ValueError."""
-    with pytest.raises(ValueError, match="No browser session found for ID: invalid_session"):
-        await session_manager.close_session("invalid_session")
+async def test_singleton_behavior():
+    """Test that SessionManager maintains singleton behavior."""
+    mgr1 = SessionManager()
+    mgr2 = SessionManager()
+    assert mgr1 is mgr2
+    assert id(mgr1) == id(mgr2)
 
 
 @pytest.mark.asyncio
-async def test_close_session_with_pages(session_manager, mock_playwright, mock_browser_context, mock_page):
-    """Test closing a session with associated pages."""
-    session_id = "test_session"
-    page_id = "test_page"
+async def test_session_management(session_mgr, mock_browser):
+    """Test basic session management operations."""
+    # Launch browser
+    session_id = await session_mgr.launch_browser(headless=True)
+    assert session_id is not None
+    assert session_id in session_mgr.sessions
     
-    # Set up the session with a page
-    mock_page.context = mock_browser_context
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
-    session_manager.add_page(page_id, mock_page)
+    # Get session
+    session = session_mgr.get_session(session_id)
+    assert session is not None
+    assert session is mock_browser
     
-    # Close the session
-    await session_manager.close_session(session_id)
+    # Close session
+    result = await session_mgr.close_browser(session_id)
+    assert result is True
+    assert session_id not in session_mgr.sessions
+    mock_browser.close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_page_management(session_mgr, mock_browser, mock_page):
+    """Test page creation and management."""
+    # Launch browser and create page
+    session_id = await session_mgr.launch_browser(headless=True)
+    page_id = await session_mgr.new_page(session_id)
     
-    # Verify cleanup
+    assert page_id is not None
+    assert page_id in session_mgr.pages
+    
+    # Get page
+    page = session_mgr.get_page(page_id)
+    assert page is not None
+    assert page is mock_page
+    
+    # Close page
+    result = await session_mgr.close_page(page_id)
+    assert result is True
+    assert page_id not in session_mgr.pages
     mock_page.close.assert_awaited_once()
-    mock_browser_context.close.assert_awaited_once()
-    mock_playwright.stop.assert_awaited_once()
-    
-    # Verify session and page are removed
-    assert session_id not in session_manager.active_contexts
-    assert session_id not in session_manager.active_playwright
-    assert page_id not in session_manager.active_pages
 
 
 @pytest.mark.asyncio
-async def test_cleanup_multiple_sessions(session_manager, mock_playwright, mock_browser_context, mock_page):
-    """Test cleanup of multiple sessions."""
-    # Create multiple sessions and pages
-    mock_playwright2 = AsyncMock()
-    mock_context2 = AsyncMock()
-    mock_page2 = AsyncMock()
+async def test_page_persistence(session_mgr, mock_browser, mock_page):
+    """Test that pages persist between operations."""
+    # Create session and page
+    session_id = await session_mgr.launch_browser(headless=True)
+    page_id = await session_mgr.new_page(session_id)
     
-    mock_playwright2.stop = AsyncMock()
-    mock_context2.close = AsyncMock()
-    mock_page2.close = AsyncMock()
+    # Verify page exists
+    assert page_id in session_mgr.pages
     
-    # Set up contexts for pages
-    mock_page.context = mock_browser_context
-    mock_page2.context = mock_context2
+    # Get page multiple times
+    page1 = session_mgr.get_page(page_id)
+    page2 = session_mgr.get_page(page_id)
     
-    # Add sessions and pages
-    session_manager.add_session("session1", mock_playwright, mock_browser_context)
-    session_manager.add_session("session2", mock_playwright2, mock_context2)
-    session_manager.add_page("page1", mock_page)
-    session_manager.add_page("page2", mock_page2)
+    assert page1 is page2
+    assert id(page1) == id(page2)
+    assert page1 is mock_page
     
-    # Run cleanup
-    await session_manager.cleanup()
-    
-    # Verify all resources were cleaned up
-    mock_page.close.assert_awaited_once()
-    mock_page2.close.assert_awaited_once()
-    mock_browser_context.close.assert_awaited_once()
-    mock_context2.close.assert_awaited_once()
-    mock_playwright.stop.assert_awaited_once()
-    mock_playwright2.stop.assert_awaited_once()
-    
-    # Verify all sessions and pages are removed
-    assert not session_manager.active_contexts
-    assert not session_manager.active_playwright
-    assert not session_manager.active_pages
+    # Verify page still exists after operations
+    assert page_id in session_mgr.pages
 
 
 @pytest.mark.asyncio
-async def test_cleanup_with_error(session_manager, mock_playwright, mock_browser_context, capsys):
-    """Test cleanup handling when an error occurs during session cleanup."""
-    session_id = "test_session"
-    session_manager.add_session(session_id, mock_playwright, mock_browser_context)
+async def test_shared_instance_behavior(mock_browser, mock_page):
+    """Test behavior of the shared session_manager instance."""
+    # Clear any existing state
+    session_manager.sessions.clear()
+    session_manager.pages.clear()
     
-    # Make the context.close() method raise an exception
-    mock_browser_context.close.side_effect = Exception("Test error")
+    # Setup mocks for the shared instance
+    async def mock_launch(browser_type: str, headless: bool):
+        return mock_browser
+    session_manager._launch_browser = AsyncMock(side_effect=mock_launch)
+    mock_browser.new_page = AsyncMock(return_value=mock_page)
     
-    # Run cleanup
-    await session_manager.cleanup()
+    # Create session and page
+    session_id = await session_manager.launch_browser(headless=True)
+    page_id = await session_manager.new_page(session_id)
     
-    # Verify error was printed
-    captured = capsys.readouterr()
-    assert f"Error cleaning up session {session_id}: Test error" in captured.out
+    # Get a new instance and verify it sees the same state
+    new_manager = SessionManager()
+    assert new_manager.get_page(page_id) is mock_page
+    assert page_id in new_manager.pages
+    assert session_id in new_manager.sessions
     
-    # Verify the cleanup attempted to close the context
-    mock_browser_context.close.assert_awaited_once()
-    
-    # The session should still be active since cleanup failed
-    assert session_id in session_manager.active_contexts
-    assert session_id in session_manager.active_playwright 
+    # Verify both instances share the same data
+    assert new_manager.pages is session_manager.pages
+    assert new_manager.sessions is session_manager.sessions 

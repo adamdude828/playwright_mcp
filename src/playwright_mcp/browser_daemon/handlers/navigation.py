@@ -37,26 +37,25 @@ class NavigationHandler(BaseHandler):
 
         try:
             # Create new session if needed
-            if not session_id or session_id not in self.session_manager.sessions:
+            if not session_id or not self.session_manager.get_session(session_id):
                 browser_type = args.get("browser_type", "chromium")
                 headless = args.get("headless", True)
                 session_id = await self.session_manager.launch_browser(browser_type, headless)
                 created_session = True
 
             # Create new page if needed
-            if not page_id or page_id not in self.session_manager.active_pages:
+            if not page_id or not self.session_manager.get_page(page_id):
                 page_id = await self.session_manager.new_page(session_id)
                 if not page_id:
                     return {"error": "Failed to create new page"}
                 created_page = True
 
             # Get the page and navigate
-            page_result = await self._get_page(page_id)
-            if "error" in page_result:
-                return page_result
+            page = self.session_manager.get_page(page_id)
+            if not page:
+                return {"error": f"No page found with ID: {page_id}"}
 
-            page = page_result["page"]
-            await page.goto(args["url"], wait_until="networkidle")
+            await page.goto(args["url"], wait_until=args.get("wait_until", "networkidle"))
 
             return {
                 "session_id": session_id,
@@ -83,12 +82,11 @@ class NavigationHandler(BaseHandler):
 
             # Navigate to URL if provided
             if "url" in args:
-                page_result = await self._get_page(page_id)
-                if "error" in page_result:
-                    return page_result
+                page = self.session_manager.get_page(page_id)
+                if not page:
+                    return {"error": f"No page found with ID: {page_id}"}
 
-                page = page_result["page"]
-                await page.goto(args["url"], wait_until="networkidle")
+                await page.goto(args["url"], wait_until=args.get("wait_until", "networkidle"))
 
             return {"page_id": page_id}
 

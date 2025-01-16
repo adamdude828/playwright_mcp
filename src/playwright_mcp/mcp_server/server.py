@@ -6,6 +6,7 @@ from mcp.server.stdio import stdio_server
 from ..browser_daemon.tools.definitions import get_tool_definitions
 from ..browser_daemon.tools.handlers import TOOL_HANDLERS
 from ..utils.logging import setup_logging
+from ..browser_daemon.core.session import session_manager
 import asyncio
 import logging
 import sys
@@ -16,13 +17,14 @@ logger = setup_logging("mcp_server")
 
 logger.debug("Server module loaded!")
 
-# Initialize server
+# Initialize server with shared session manager
 server = Server("playwright")
 
 # Debug: Log available tools
 tools = get_tool_definitions()
 logger.debug(f"Available tools: {[t.name for t in tools]}")
 logger.debug(f"Registered handlers: {list(TOOL_HANDLERS.keys())}")
+logger.debug(f"Using session manager instance: {id(session_manager)}")
 
 TOOLS = [
     Tool(
@@ -39,6 +41,24 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {}
+        }
+    ),
+    Tool(
+        name="search-dom",
+        description="Search the entire DOM for elements matching the search text in ids, classes, or attributes using BeautifulSoup",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "page_id": {
+                    "type": "string",
+                    "description": "Page ID to search in"
+                },
+                "search_text": {
+                    "type": "string",
+                    "description": "Text to search for in the DOM"
+                }
+            },
+            "required": ["page_id", "search_text"]
         }
     ),
     Tool(

@@ -2,7 +2,7 @@ import asyncio
 
 from .core.logging import setup_logging
 from .core.server import UnixSocketServer
-from .core.session import SessionManager
+from .core.session import session_manager
 from .handlers.navigation import NavigationHandler
 from .handlers.dom import DOMHandler
 from .handlers.screenshot import ScreenshotHandler
@@ -13,10 +13,13 @@ logger = setup_logging("browser_manager")
 
 class BrowserManager:
     def __init__(self):
-        self.session_manager = SessionManager()
+        # Use the shared session manager instance
+        self.session_manager = session_manager
+        logger.debug(f"BrowserManager using session manager instance: {id(self.session_manager)}")
+        
         self.server = UnixSocketServer()
         
-        # Initialize handlers
+        # Initialize handlers with the same session manager instance
         nav_handler = NavigationHandler(self.session_manager)
         dom_handler = DOMHandler(self.session_manager)
         screenshot_handler = ScreenshotHandler(self.session_manager)
@@ -31,6 +34,7 @@ class BrowserManager:
             # DOM commands
             "execute-js": dom_handler,
             "explore-dom": dom_handler,
+            "search-dom": dom_handler,
             
             # Screenshot commands
             "screenshot": screenshot_handler,

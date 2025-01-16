@@ -92,7 +92,7 @@ async def test_execute_js_with_invalid_page(client, browser_page):
     })
     
     # Check for error in the response
-    assert "No page found for ID: invalid-page" in result[0].text
+    assert "No page found with ID: invalid-page" in result[0].text
 
 
 @pytest.mark.asyncio
