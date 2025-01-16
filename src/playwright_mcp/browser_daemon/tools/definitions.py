@@ -168,5 +168,198 @@ def get_tool_definitions() -> list[Tool]:
                 },
                 "required": ["page_id"]
             }
+        ),
+        Tool(
+            name="interact-dom",
+            description=(
+                "Perform real-time interactions with DOM elements like clicking, typing, hovering, etc. "
+                "Supports common user interactions and returns the result of the operation."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID where the interaction should occur"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "CSS selector to target the element to interact with"
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "Type of interaction to perform",
+                        "enum": ["click", "type", "hover", "focus", "press", "select"]
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value to use for the interaction (e.g. text to type, key to press)"
+                    },
+                    "options": {
+                        "type": "object",
+                        "description": (
+                            "Additional options for the interaction "
+                            "(e.g. click position, delay between keystrokes)"
+                        ),
+                        "properties": {
+                            "delay": {
+                                "type": "number",
+                                "description": "Delay between keystrokes for typing (milliseconds)"
+                            },
+                            "position": {
+                                "type": "object",
+                                "description": "Click position relative to element",
+                                "properties": {
+                                    "x": {"type": "number"},
+                                    "y": {"type": "number"}
+                                }
+                            },
+                            "button": {
+                                "type": "string",
+                                "enum": ["left", "right", "middle"],
+                                "description": "Mouse button to use for click"
+                            },
+                            "clickCount": {
+                                "type": "number",
+                                "description": "Number of times to click"
+                            }
+                        }
+                    }
+                },
+                "required": ["page_id", "selector", "action"]
+            }
+        ),
+        Tool(
+            name="search-dom",
+            description=(
+                "Search for DOM elements matching specific criteria like text content, "
+                "tag name, or attributes. Returns matching elements with their properties "
+                "and location in the DOM tree."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID to search in"
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Text content to search for (case-insensitive)"
+                    },
+                    "tag": {
+                        "type": "string",
+                        "description": "HTML tag name to filter by (e.g. 'div', 'a', 'button')"
+                    },
+                    "class_name": {
+                        "type": "string",
+                        "description": "CSS class to filter by"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Element ID to filter by"
+                    },
+                    "attribute": {
+                        "type": "object",
+                        "description": "Custom attribute to filter by",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Attribute name"
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "Attribute value"
+                            }
+                        },
+                        "required": ["name", "value"]
+                    }
+                },
+                "required": ["page_id"]
+            }
+        ),
+        Tool(
+            name="screenshot",
+            description="Take a screenshot of the current page or a specific element",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID to take screenshot of"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "Optional CSS selector to screenshot specific element"
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "Path to save screenshot file"
+                    },
+                    "full_page": {
+                        "type": "boolean",
+                        "description": "Whether to take full page screenshot",
+                        "default": False
+                    }
+                },
+                "required": ["page_id", "path"]
+            }
+        ),
+        Tool(
+            name="highlight-element",
+            description=(
+                "Highlight a DOM element by adding a colored outline. Useful for visualizing "
+                "element locations during testing and debugging."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID containing the element"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "CSS selector for element to highlight"
+                    },
+                    "color": {
+                        "type": "string",
+                        "description": "Color to use for highlight (CSS color value)",
+                        "default": "red"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "description": "How long to show highlight in milliseconds",
+                        "default": 1000
+                    }
+                },
+                "required": ["page_id", "selector"]
+            }
+        ),
+        Tool(
+            name="find-similar-selectors",
+            description=(
+                "Find alternative CSS selectors for a given element that are more robust "
+                "against page changes. Returns multiple selector options ranked by reliability."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID containing the element"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "Current CSS selector for the element"
+                    },
+                    "max_results": {
+                        "type": "number",
+                        "description": "Maximum number of alternative selectors to return",
+                        "default": 5
+                    }
+                },
+                "required": ["page_id", "selector"]
+            }
         )
     ]

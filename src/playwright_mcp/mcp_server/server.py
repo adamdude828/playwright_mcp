@@ -45,7 +45,10 @@ TOOLS = [
     ),
     Tool(
         name="search-dom",
-        description="Search the entire DOM for elements matching the search text in ids, classes, or attributes using BeautifulSoup",
+        description=(
+            "Search the entire DOM for elements matching the search text in ids, "
+            "classes, or attributes using BeautifulSoup"
+        ),
         inputSchema={
             "type": "object",
             "properties": {

@@ -9,6 +9,7 @@ from .explore_dom import handle_explore_dom
 from .screenshot import handle_screenshot
 from .highlight_element import handle_highlight_element
 from .search_dom import handle_search_dom
+from .interact_dom import handle_interact_dom
 
 
 # Map of tool names to their handlers
@@ -24,4 +25,5 @@ TOOL_HANDLERS = {
     "screenshot": handle_screenshot,
     "highlight-element": handle_highlight_element,
     "search-dom": handle_search_dom,
+    "interact-dom": handle_interact_dom,
 }

@@ -7,6 +7,7 @@ from .handlers.navigation import NavigationHandler
 from .handlers.dom import DOMHandler
 from .handlers.screenshot import ScreenshotHandler
 from .handlers.session import SessionHandler
+from .handlers.interaction import InteractionHandler
 
 logger = setup_logging("browser_manager")
 
@@ -24,6 +25,7 @@ class BrowserManager:
         dom_handler = DOMHandler(self.session_manager)
         screenshot_handler = ScreenshotHandler(self.session_manager)
         session_handler = SessionHandler(self.session_manager)
+        interaction_handler = InteractionHandler(self.session_manager)
 
         # Map commands to handlers
         self.handlers = {
@@ -42,7 +44,10 @@ class BrowserManager:
             
             # Session management commands
             "close-browser": session_handler,
-            "close-tab": session_handler
+            "close-tab": session_handler,
+            
+            # Interaction commands
+            "interact-dom": interaction_handler
         }
 
     async def handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
