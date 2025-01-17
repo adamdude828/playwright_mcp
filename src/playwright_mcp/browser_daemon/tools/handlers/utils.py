@@ -28,12 +28,44 @@ import json
 import os
 import subprocess
 import sys
+from typing import Dict
+from playwright.async_api import Page
 from mcp.types import TextContent
 from ....utils.logging import setup_logging
 
 
 # Configure logging
 logger = setup_logging("handler_utils")
+
+# Store page instances
+_page_instances: Dict[str, Page] = {}
+
+
+def get_page(page_id: str) -> Page:
+    """Get a Playwright page instance by its ID.
+    
+    Args:
+        page_id: The unique identifier for the page
+        
+    Returns:
+        Page: The Playwright page instance
+        
+    Raises:
+        ValueError: If the page_id is not found
+    """
+    if page_id not in _page_instances:
+        raise ValueError(f"Page {page_id} not found")
+    return _page_instances[page_id]
+
+
+def register_page(page_id: str, page: Page) -> None:
+    """Register a Playwright page instance.
+    
+    Args:
+        page_id: The unique identifier for the page
+        page: The Playwright page instance
+    """
+    _page_instances[page_id] = page
 
 
 async def check_daemon_running() -> bool:

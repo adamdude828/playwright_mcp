@@ -10,6 +10,8 @@ from .screenshot import handle_screenshot
 from .highlight_element import handle_highlight_element
 from .search_dom import handle_search_dom
 from .interact_dom import handle_interact_dom
+from .ai_agent import handle_ai_agent
+from .ai_agent.get_result import handle_get_ai_result
 
 
 # Map of tool names to their handlers
@@ -26,4 +28,6 @@ TOOL_HANDLERS = {
     "highlight-element": handle_highlight_element,
     "search-dom": handle_search_dom,
     "interact-dom": handle_interact_dom,
+    "ai-agent": handle_ai_agent,
+    "get-ai-result": handle_get_ai_result,
 }

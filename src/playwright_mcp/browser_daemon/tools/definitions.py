@@ -361,5 +361,48 @@ def get_tool_definitions() -> list[Tool]:
                 },
                 "required": ["page_id", "selector"]
             }
+        ),
+        Tool(
+            name="ai-agent",
+            description=(
+                "Start an AI agent job to analyze and interact with a web page using natural language. "
+                "Returns a job ID immediately that can be used to check the result status."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_id": {
+                        "type": "string",
+                        "description": "Page ID to analyze"
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": "Natural language query describing what to analyze or do"
+                    },
+                    "max_actions": {
+                        "type": "integer",
+                        "description": "Maximum number of actions the agent can take",
+                        "default": 5
+                    }
+                },
+                "required": ["page_id", "query"]
+            }
+        ),
+        Tool(
+            name="get-ai-result",
+            description=(
+                "Get the result of a previously started AI agent job. "
+                "Returns the job status and result if completed."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "job_id": {
+                        "type": "string",
+                        "description": "ID of the job to check"
+                    }
+                },
+                "required": ["job_id"]
+            }
         )
     ]
