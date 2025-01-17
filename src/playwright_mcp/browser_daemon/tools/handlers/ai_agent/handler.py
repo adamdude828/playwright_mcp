@@ -49,7 +49,7 @@ class AIAgentHandler(ToolHandler):
 _handler = AIAgentHandler()
 
 
-async def handle_ai_agent(daemon, arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_ai_agent(arguments: Dict[str, Any], daemon=None) -> Dict[str, Any]:
     """Function-based interface for backward compatibility."""
     try:
         return await _handler.handle(AIAgentInput(**arguments))

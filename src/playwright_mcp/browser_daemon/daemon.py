@@ -1,6 +1,6 @@
 import logging
 from .session import SessionManager
-from .tools.handlers.ai_agent.job_store import JobStore
+from .tools.handlers.ai_agent.job_store import job_store
 
 
 logger = logging.getLogger("browser_daemon")
@@ -9,5 +9,5 @@ logger = logging.getLogger("browser_daemon")
 class BrowserDaemon:
     def __init__(self):
         self.session_manager = SessionManager()
-        self.job_store = JobStore()  # Initialize job store
+        self.job_store = job_store  # Use the singleton job store instance
         logger.info("Browser daemon initialized with job store") 

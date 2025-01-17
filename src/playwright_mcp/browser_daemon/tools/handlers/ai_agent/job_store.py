@@ -28,10 +28,20 @@ class JobStatus:
 class JobStore:
     """Store for managing AI agent jobs."""
     
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(JobStore, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self):
-        self._jobs: Dict[str, JobStatus] = {}
-        self._tasks: Dict[str, asyncio.Task] = {}
-        logger.info("JobStore initialized")
+        if not self._initialized:
+            self._jobs: Dict[str, JobStatus] = {}
+            self._tasks: Dict[str, asyncio.Task] = {}
+            self._initialized = True
+            logger.info("JobStore initialized")
     
     async def create_job(self, page_id: str, query: str, max_actions: Optional[int] = None) -> str:
         """Create a new job and return its ID."""

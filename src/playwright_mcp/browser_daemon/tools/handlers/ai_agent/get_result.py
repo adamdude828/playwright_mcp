@@ -43,7 +43,7 @@ class GetAIResultHandler(ToolHandler):
 _handler = GetAIResultHandler()
 
 
-async def handle_get_ai_result(daemon, arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_get_ai_result(arguments: Dict[str, Any], daemon=None) -> Dict[str, Any]:
     """Function-based interface for backward compatibility."""
     try:
         return await _handler.handle(GetAIResultInput(**arguments), daemon=daemon)

@@ -8,12 +8,18 @@ from .handlers.dom import DOMHandler
 from .handlers.screenshot import ScreenshotHandler
 from .handlers.session import SessionHandler
 from .handlers.interaction import InteractionHandler
+from .tools.handlers.ai_agent.handler import AIAgentHandler
+from .tools.handlers.ai_agent.get_result import GetAIResultHandler
+from .daemon import BrowserDaemon
 
 logger = setup_logging("browser_manager")
 
 
 class BrowserManager:
     def __init__(self):
+        # Initialize the browser daemon
+        self.daemon = BrowserDaemon()
+        
         # Use the shared session manager instance
         self.session_manager = session_manager
         logger.debug(f"BrowserManager using session manager instance: {id(self.session_manager)}")
@@ -26,28 +32,34 @@ class BrowserManager:
         screenshot_handler = ScreenshotHandler(self.session_manager)
         session_handler = SessionHandler(self.session_manager)
         interaction_handler = InteractionHandler(self.session_manager)
+        ai_agent_handler = AIAgentHandler()
+        get_ai_result_handler = GetAIResultHandler()
 
-        # Map commands to handlers
+        # Map commands to handlers and whether they need daemon access
         self.handlers = {
             # Navigation commands
-            "navigate": nav_handler,
-            "new-tab": nav_handler,
+            "navigate": {"handler": nav_handler, "needs_daemon": False},
+            "new-tab": {"handler": nav_handler, "needs_daemon": False},
             
             # DOM commands
-            "execute-js": dom_handler,
-            "explore-dom": dom_handler,
-            "search-dom": dom_handler,
+            "execute-js": {"handler": dom_handler, "needs_daemon": False},
+            "explore-dom": {"handler": dom_handler, "needs_daemon": False},
+            "search-dom": {"handler": dom_handler, "needs_daemon": False},
             
             # Screenshot commands
-            "screenshot": screenshot_handler,
-            "highlight-element": screenshot_handler,
+            "screenshot": {"handler": screenshot_handler, "needs_daemon": False},
+            "highlight-element": {"handler": screenshot_handler, "needs_daemon": False},
             
             # Session management commands
-            "close-browser": session_handler,
-            "close-tab": session_handler,
+            "close-browser": {"handler": session_handler, "needs_daemon": False},
+            "close-tab": {"handler": session_handler, "needs_daemon": False},
             
             # Interaction commands
-            "interact-dom": interaction_handler
+            "interact-dom": {"handler": interaction_handler, "needs_daemon": False},
+            
+            # AI agent commands
+            "ai-agent": {"handler": ai_agent_handler, "needs_daemon": True},
+            "get-ai-result": {"handler": get_ai_result_handler, "needs_daemon": True}
         }
 
     async def handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -63,13 +75,17 @@ class BrowserManager:
             elif command == "ping":
                 response = {"result": "pong"}
             else:
-                handler = self.handlers.get(command)
-                if not handler:
+                handler_info = self.handlers.get(command)
+                if not handler_info:
                     response = {"error": f"Unknown command: {command}"}
                 else:
                     # Add command to args so handler knows what to do
                     args["command"] = command
-                    response = await handler.handle(args)
+                    # Only pass daemon to handlers that need it
+                    if handler_info["needs_daemon"]:
+                        response = await handler_info["handler"].handle(args, daemon=self.daemon)
+                    else:
+                        response = await handler_info["handler"].handle(args)
             
             await self.server.send_response(writer, response)
 
