@@ -128,6 +128,7 @@ async def test_shutdown(browser_manager):
     """Test shutting down the browser manager."""
     # Mock the session_manager's shutdown method
     browser_manager.session_manager.shutdown = AsyncMock()
+    browser_manager.server.cleanup = AsyncMock()
     
     await browser_manager.shutdown()
     
