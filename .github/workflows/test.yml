@@ -13,6 +13,7 @@ jobs:
       TMPDIR: /tmp
       PYTHONPATH: ${{ github.workspace }}/src
       LOG_STD_OUT: true
+      LOG_LEVEL: DEBUG
     permissions:
       contents: read
       
@@ -47,7 +48,10 @@ jobs:
         
       - name: Setup MCP CLI config
         run: |
-          cat > server_config.json << 'EOF'
+          # Create config directory
+          mkdir -p ~/.mcp-cli
+          # Create config file
+          cat > ~/.mcp-cli/server_config.json << 'EOF'
           {
             "mcpServers": {
               "playwright": {
@@ -65,14 +69,24 @@ jobs:
             }
           }
           EOF
+          # Verify config
+          cat ~/.mcp-cli/server_config.json
           
       - name: Create logs directory
         run: |
           mkdir -p logs
           chmod 777 logs
+          ls -la logs
           
       - name: Run test
         run: |
+          # Debug info
+          echo "Current directory: $(pwd)"
+          echo "Python path: $PYTHONPATH"
+          echo "Log level: $LOG_LEVEL"
+          echo "MCP CLI config location:"
+          ls -la ~/.mcp-cli/
+          # Run tests
           poetry run pytest tests/integration/test_execute_js.py::test_execute_simple_js -v
         
       - name: Cleanup Services
