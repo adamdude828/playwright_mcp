@@ -49,7 +49,7 @@ jobs:
                   "-m",
                   "playwright_mcp",
                   "--mode",
-                  "server"
+                  "both"
                 ],
                 "logging": {
                   "level": "DEBUG"
@@ -70,5 +70,5 @@ jobs:
       - name: Cleanup Services
         if: always()
         run: |
-          pkill -f "python -m playwright_mcp" || true
-          pkill -f "playwright_mcp.browser_manager" || true 
+          pkill -f "playwright_mcp.browser_daemon" || true
+          pkill -f "python -m playwright_mcp" || true 
