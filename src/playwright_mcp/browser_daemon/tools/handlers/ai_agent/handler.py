@@ -13,43 +13,35 @@ async def handle_ai_agent(args: dict, daemon=None) -> dict:
     if "page_id" not in args:
         logger.error("Missing required argument: page_id")
         return {
-            "status": "error",
             "isError": True,
+            "status": "error",
             "error": "Missing required argument: page_id"
         }
     if "query" not in args:
         logger.error("Missing required argument: query")
         return {
-            "status": "error",
             "isError": True,
+            "status": "error",
             "error": "Missing required argument: query"
         }
 
     try:
-        logger.info("Sending AI agent request to manager")
         result = await send_to_manager("ai-agent", args)
-        logger.info(f"Received result from manager: {result}")
-        
         if "error" in result:
-            logger.error(f"AI agent request failed: {result['error']}")
             return {
-                "status": "error",
                 "isError": True,
+                "status": "error",
                 "error": result["error"]
             }
-            
-        logger.info(f"AI agent job started successfully with job_id: {result.get('job_id')}")
         return {
+            "isError": False,
             "status": "running",
-            "job_id": result["job_id"],
-            "message": result["message"],
-            "isError": False
+            **result
         }
-        
     except Exception as e:
         logger.error(f"AI agent request failed with exception: {e}", exc_info=True)
         return {
-            "status": "error",
             "isError": True,
+            "status": "error",
             "error": f"AI agent request failed: {str(e)}"
         } 

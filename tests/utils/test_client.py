@@ -9,10 +9,11 @@ This is a simplified MCP client for testing purposes. Unlike a full MCP client t
 This test client directly executes tool calls for testing, bypassing the LLM interaction.
 It uses the same tool handlers that would be available to a full MCP client.
 """
-from typing import Dict, Any, List
-from playwright_mcp.mcp_server.core import TextContent
+import os
 import json
 import subprocess
+from typing import Dict, Any, List
+from playwright_mcp.mcp_server.core import TextContent
 
 
 class TestClient:
@@ -22,6 +23,11 @@ class TestClient:
     It does not manage the tool lifecycle - tests should handle starting/stopping
     daemons explicitly for clarity.
     """
+    
+    def __init__(self):
+        self.env = os.environ.copy()
+        self.env['LOG_LEVEL'] = 'DEBUG'  # Ensure debug logging is enabled
+        self.cwd = os.getcwd()  # Store working directory
     
     async def __aenter__(self):
         return self
@@ -39,7 +45,9 @@ class TestClient:
             result = subprocess.run(
                 ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'start-daemon', '--tool-args', '{}'],
                 capture_output=True,
-                text=True
+                text=True,
+                env=self.env,
+                cwd=self.cwd
             )
             return [TextContent(type="text", text="Browser daemon started successfully")]
         elif tool_name == "stop-daemon":
@@ -47,7 +55,9 @@ class TestClient:
             result = subprocess.run(
                 ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon', '--tool-args', '{}'],
                 capture_output=True,
-                text=True
+                text=True,
+                env=self.env,
+                cwd=self.cwd
             )
             return [TextContent(type="text", text="Browser daemon stopped successfully")]
         elif tool_name == "navigate":

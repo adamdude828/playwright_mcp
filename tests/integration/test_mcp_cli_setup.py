@@ -236,11 +236,10 @@ async def test_daemon_entry_point_and_logging():
     # Remove any existing log files
     log_dir = os.path.join(os.getcwd(), 'logs')
     os.makedirs(log_dir, exist_ok=True)
-    for log_file in ['debug.log', 'error.log']:
-        try:
-            os.unlink(os.path.join(log_dir, log_file))
-        except OSError:
-            pass
+    try:
+        os.unlink(os.path.join(log_dir, 'app.log'))
+    except OSError:
+        pass
     
     async with TestClient() as client:
         # Start the daemon
@@ -261,16 +260,15 @@ async def test_daemon_entry_point_and_logging():
         )
         assert ps_result.stdout.strip(), "Daemon process not found or using incorrect entry point"
         
-        # Verify log files exist and contain initialization messages
-        debug_log_path = os.path.join(log_dir, 'debug.log')
-        assert os.path.exists(debug_log_path), "Debug log file not created"
+        # Verify log file exists and contains initialization messages
+        app_log_path = os.path.join(log_dir, 'app.log')
+        assert os.path.exists(app_log_path), "App log file not created"
         
-        with open(debug_log_path, 'r') as f:
+        with open(app_log_path, 'r') as f:
             log_content = f.read()
             # Check for key initialization messages
-            assert "Starting server initialization" in log_content, "Missing server initialization log"
-            assert "MCP server initialized" in log_content, "Missing server initialized log"
-            assert "Starting browser manager service" in log_content, "Missing browser manager start log"
+            assert "Starting MCP server initialization" in log_content, "Missing server initialization log"
+            assert "Starting browser daemon" in log_content, "Missing browser manager start log"
             assert "Daemon started successfully" in log_content, "Missing daemon start success log"
         
         # Stop the daemon

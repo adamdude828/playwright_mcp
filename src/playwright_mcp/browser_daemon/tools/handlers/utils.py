@@ -140,47 +140,23 @@ async def start_daemon() -> None:
     logs_dir = os.path.join(project_root, 'logs')
     os.makedirs(logs_dir, exist_ok=True)
     
-    # Start the daemon as a background process
+    # Open log files for the daemon process
+    debug_log = open(os.path.join(logs_dir, 'debug.log'), 'a', buffering=1)  # Line buffered
+    error_log = open(os.path.join(logs_dir, 'error.log'), 'a', buffering=1)  # Line buffered
+    
     try:
-        # Start process with async subprocess
+        # Start process with file descriptors for logs
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             '-m',
             'playwright_mcp.browser_daemon',
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            stdout=debug_log.fileno(),
+            stderr=error_log.fileno(),
             env=env,
             cwd=project_root
         )
         
         logger.info("Daemon start command issued")
-        
-        # Create an async task to read and log output
-        async def log_output():
-            while True:
-                # Check if process has ended
-                if process.returncode is not None:
-                    break
-                
-                # Read output (with timeout to prevent blocking)
-                try:
-                    stdout_data = await asyncio.wait_for(process.stdout.readline(), timeout=0.1)
-                    if stdout_data:
-                        logger.debug(f"Daemon stdout: {stdout_data.decode().strip()}")
-                except asyncio.TimeoutError:
-                    pass
-                
-                try:
-                    stderr_data = await asyncio.wait_for(process.stderr.readline(), timeout=0.1)
-                    if stderr_data:
-                        logger.error(f"Daemon stderr: {stderr_data.decode().strip()}")
-                except asyncio.TimeoutError:
-                    pass
-                
-                await asyncio.sleep(0.1)
-        
-        # Start logging task
-        asyncio.create_task(log_output())
         
         # Give the process a moment to start
         await asyncio.sleep(1)
@@ -196,6 +172,8 @@ async def start_daemon() -> None:
                 # Verify we can connect
                 if await check_daemon_running():
                     logger.info("Daemon started successfully")
+                    debug_log.flush()  # Ensure logs are written
+                    error_log.flush()
                     return
             await asyncio.sleep(0.5)
             
@@ -204,6 +182,12 @@ async def start_daemon() -> None:
     except Exception as e:
         logger.error(f"Error starting daemon: {str(e)}")
         raise Exception(f"Failed to start daemon: {str(e)}")
+    finally:
+        # Flush and close log files
+        debug_log.flush()
+        error_log.flush()
+        debug_log.close()
+        error_log.close()
 
 
 async def send_to_manager(command: str, args: dict) -> dict:
@@ -235,8 +219,22 @@ async def send_to_manager(command: str, args: dict) -> dict:
         raise Exception("Browser daemon is not running. Please call the 'start-daemon' tool first.")
 
     try:
-        reader, writer = await asyncio.open_unix_connection(socket_path)
-        logger.debug("Connected to browser manager")
+        logger.debug("Attempting to connect to browser manager")
+        logger.debug(f"Socket path: {socket_path}")
+        logger.debug(f"Socket exists: {os.path.exists(socket_path)}")
+        
+        try:
+            reader, writer = await asyncio.open_unix_connection(socket_path)
+            logger.debug("Connected to browser manager")
+        except ConnectionRefusedError as e:
+            logger.error(f"Connection refused to socket {socket_path}. Socket file exists but no process is listening.")
+            raise Exception(f"Browser daemon socket exists but is not accepting connections: {e}")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing socket {socket_path}")
+            raise Exception(f"Permission denied accessing browser daemon socket: {e}")
+        except OSError as e:
+            logger.error(f"OS error connecting to socket {socket_path}: {e}")
+            raise Exception(f"Failed to connect to browser daemon socket: {e}")
 
         # Send request with delimiter
         request = {"command": command, "args": args}

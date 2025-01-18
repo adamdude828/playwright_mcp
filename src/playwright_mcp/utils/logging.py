@@ -1,8 +1,11 @@
 """Centralized logging configuration."""
 import logging
 import os
-import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 
 def setup_logging(name: str) -> logging.Logger:
@@ -13,31 +16,24 @@ def setup_logging(name: str) -> logging.Logger:
     
     # Configure logging
     logger = logging.getLogger(name)
-    logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
+    
+    # Set level from .env, default to INFO if not set
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    logger.setLevel(getattr(logging, log_level))
 
-    # File handler for debug logs
-    debug_handler = logging.FileHandler(log_dir / "debug.log")
-    debug_handler.setLevel(logging.DEBUG)
-    debug_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # Single file handler for all logs
+    file_handler = logging.FileHandler(log_dir / "app.log")
+    file_handler.setLevel(logging.DEBUG)  # Capture all levels, filtering happens at logger level
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s\n%(pathname)s:%(lineno)d'
     )
-    debug_handler.setFormatter(debug_formatter)
-    logger.addHandler(debug_handler)
-
-    # File handler for errors
-    error_handler = logging.FileHandler(log_dir / "error.log")
-    error_handler.setLevel(logging.ERROR)
-    error_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s\n%(pathname)s:%(lineno)d\n'
-    )
-    error_handler.setFormatter(error_formatter)
-    logger.addHandler(error_handler)
-
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
-    console_formatter = logging.Formatter('%(levelname)s - %(message)s')
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
+    file_handler.setFormatter(formatter)
+    
+    # Remove any existing handlers to avoid duplicates
+    logger.handlers.clear()
+    logger.addHandler(file_handler)
+    
+    # Ensure we propagate to root logger
+    logger.propagate = True
 
     return logger 

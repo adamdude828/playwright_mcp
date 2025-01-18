@@ -17,6 +17,7 @@ logger = setup_logging("browser_manager")
 
 class BrowserManager:
     def __init__(self):
+        logger.info("Starting server initialization")
         # Use the shared session manager instance
         self.session_manager = session_manager
         logger.debug(f"BrowserManager using session manager instance: {id(self.session_manager)}")
@@ -25,6 +26,7 @@ class BrowserManager:
         self.job_store = job_store  # Use the singleton job store instance
         
         # Initialize handlers with the same session manager instance
+        logger.debug("Initializing handlers")
         nav_handler = NavigationHandler(self.session_manager)
         dom_handler = DOMHandler(self.session_manager)
         screenshot_handler = ScreenshotHandler(self.session_manager)
@@ -48,17 +50,18 @@ class BrowserManager:
             "screenshot": {"handler": screenshot_handler, "needs_daemon": False},
             "highlight-element": {"handler": screenshot_handler, "needs_daemon": False},
             
-            # Session management commands
-            "close-browser": {"handler": session_handler, "needs_daemon": False},
-            "close-tab": {"handler": session_handler, "needs_daemon": False},
+            # Session commands
+            "new-session": {"handler": session_handler, "needs_daemon": False},
+            "close-session": {"handler": session_handler, "needs_daemon": False},
             
             # Interaction commands
             "interact-dom": {"handler": interaction_handler, "needs_daemon": False},
             
             # AI agent commands
-            "ai-agent": {"handler": ai_agent_handler, "needs_daemon": True},
-            "get-ai-result": {"handler": get_result_handler, "needs_daemon": True}
+            "ai-agent": {"handler": ai_agent_handler, "needs_daemon": False},
+            "get-result": {"handler": get_result_handler, "needs_daemon": False},
         }
+        logger.info("MCP server initialized")
 
     async def handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Handle a connection from a client."""
@@ -96,6 +99,7 @@ class BrowserManager:
         """Start the browser manager service."""
         logger.info("Starting browser manager service")
         await self.server.start(self.handle_connection)
+        logger.info("Daemon started successfully")
 
     async def shutdown(self):
         """Shutdown the browser manager service."""
