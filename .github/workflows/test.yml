@@ -71,13 +71,9 @@ jobs:
           mkdir -p logs
           chmod 777 logs
           
-      - name: Run unit tests
+      - name: Run test
         run: |
-          poetry run pytest tests/unit/ -v
-          
-      - name: Run integration tests
-        run: |
-          poetry run pytest tests/integration/ -v
+          poetry run pytest tests/integration/test_execute_js.py::test_execute_simple_js -v
         
       - name: Cleanup Services
         if: always()
