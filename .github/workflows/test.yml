@@ -12,6 +12,7 @@ jobs:
     env:
       TMPDIR: /tmp
       PYTHONPATH: ${{ github.workspace }}/src
+      LOG_STD_OUT: true
     permissions:
       contents: read
       
