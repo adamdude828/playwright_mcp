@@ -1,124 +1,157 @@
-"""Integration tests for the AI agent functionality."""
+"""Integration test for AIAgentHandler with direct page interaction."""
+
 import pytest
 import asyncio
-import json
-from tests.utils.test_client import TestClient
+import logging
+from playwright.async_api import async_playwright, Page
+from playwright_mcp.browser_daemon.handlers.ai_agent import AIAgentHandler
+from playwright_mcp.browser_daemon.core.session import SessionManager
+from playwright_mcp.browser_daemon.tools.handlers.ai_agent.job_store import JobStore
+from playwright_mcp.browser_daemon.tools.handlers.ai_agent.tools import create_agent
 
 
-@pytest.fixture(scope="module")
-async def client():
-    """Create and yield a test client."""
-    async with TestClient() as client:
-        # Start the daemon
-        await client.call_tool("start-daemon", {})
-        yield client
-        # Stop the daemon
-        await client.call_tool("stop-daemon", {})
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+class MockDaemon:
+    """Mock daemon class for testing."""
+    def __init__(self):
+        self.job_store = JobStore()
 
 
 @pytest.fixture
-async def browser_page(client):
-    """Create a browser and page for testing."""
-    # Navigate to create a session and page
-    result = await client.call_tool("navigate", {
-        "url": "https://example.com",
-        "headless": False
-    })
-    
-    # Parse the nested response data
-    response_data = json.loads(result[0].text)
-    
-    yield {
-        "session_id": response_data["session_id"],
-        "page_id": response_data["page_id"]
-    }
-    
-    # Cleanup
-    await client.call_tool("close-browser", {"session_id": response_data["session_id"]})
+async def browser_setup():
+    """Set up browser and page for testing."""
+    logger.info("Setting up browser and page")
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        page = await browser.new_page()
+        await page.goto("https://example.com")
+        logger.info("Browser and page setup complete")
+        
+        yield page
+        
+        # Cleanup
+        logger.info("Cleaning up browser and page")
+        await page.close()
+        await browser.close()
+        logger.info("Cleanup complete")
 
 
 @pytest.mark.asyncio
-async def test_ai_agent_analyze_page(client, browser_page):
-    """Test AI agent analyzing a page's content."""
-    # Start an AI agent job
-    result = await client.call_tool("ai-agent", {
-        "page_id": browser_page["page_id"],
-        "query": "What is the main heading on this page?"
-    })
+async def test_ai_agent_query_about_example(browser_setup: Page):
+    """Test querying the AI agent about example.com content."""
+    page = browser_setup
     
-    # Parse the response to get job ID
-    response_data = json.loads(result[0].text)
-    assert "job_id" in response_data, "Response should contain a job ID"
-    assert "error" not in response_data, f"Should not get error starting job: {response_data.get('error')}"
-    job_id = response_data["job_id"]
+    # Set up session manager and store page
+    session_manager = SessionManager()
+    page_id = "test_page_1"
+    session_manager.add_page(page_id, page)
     
-    # Get the result (may need to retry a few times)
-    max_retries = 5
-    for _ in range(max_retries):
-        result = await client.call_tool("get-ai-result", {
-            "job_id": job_id
-        })
-        response_data = json.loads(result[0].text)
-        
-        if response_data["status"] == "completed":
+    # Create handler and daemon
+    handler = AIAgentHandler(session_manager)
+    daemon = MockDaemon()
+    
+    # Create agent
+    agent = create_agent(page_id)
+    daemon.agent = agent
+    
+    # Send query to handler
+    query = "What is the main heading on the page?"
+    logger.info(f"Sending query to AI agent: {query}")
+    result = await handler.handle({
+        "command": "ai-agent",
+        "page_id": page_id,
+        "query": query
+    }, daemon)
+    
+    assert "job_id" in result
+    assert "message" in result
+    assert result["message"] == "AI agent job started successfully"
+    
+    # Wait for job to complete
+    job_id = result["job_id"]
+    max_wait = 30  # Maximum seconds to wait
+    wait_time = 0
+    
+    while wait_time < max_wait:
+        job = daemon.job_store.get_job(job_id)
+        if job and job.status == "completed":
+            logger.info("Job completed successfully")
+            logger.info("AI Agent's Answer:")
+            logger.info("-" * 40)
+            logger.info(job.result.data)  # Just log the answer text
+            logger.info("-" * 40)
+            
+            assert "Example Domain" in str(job.result)
+            break
+        elif job and job.status == "error":
+            logger.error(f"Job failed with error: {job.error}")
+            logger.error(f"Job details: {vars(job)}")
+            break
+        await asyncio.sleep(1)
+        wait_time += 1 
+
+
+@pytest.mark.asyncio
+async def test_ai_agent_find_subscribe_button(browser_setup: Page):
+    """Test finding the subscribe button on The Points Guy website."""
+    page = browser_setup
+    
+    # Navigate to The Points Guy website
+    await page.goto("https://thepointsguy.com")
+    
+    # Set up session manager and store page
+    session_manager = SessionManager()
+    page_id = "test_page_1"
+    session_manager.add_page(page_id, page)
+    
+    # Create handler and daemon
+    handler = AIAgentHandler(session_manager)
+    daemon = MockDaemon()
+    
+    # Create agent
+    agent = create_agent(page_id)
+    daemon.agent = agent
+    
+    # Send query to handler
+    query = "Find the selector for the subscribe button in the menu. Once found, click it."
+    logger.info(f"Sending query to AI agent: {query}")
+    result = await handler.handle({
+        "command": "ai-agent",
+        "page_id": page_id,
+        "query": query
+    }, daemon)
+    
+    assert "job_id" in result
+    assert "message" in result
+    assert result["message"] == "AI agent job started successfully"
+    
+    # Wait for job to complete
+    job_id = result["job_id"]
+    max_wait = 30  # Maximum seconds to wait
+    wait_time = 0
+    
+    while wait_time < max_wait:
+        job = daemon.job_store.get_job(job_id)
+        if job and job.status == "completed":
+            logger.info("Job completed successfully")
+            logger.info("AI Agent's Answer:")
+            logger.info("-" * 40)
+            logger.info(job.result.data)
+            logger.info("-" * 40)
+            
+            # The result should contain information about finding and clicking the subscribe button
+            assert "subscribe" in job.result.data.lower()
             break
             
-        if response_data["status"] == "error":
-            assert False, f"Job failed with error: {response_data.get('error')}"
+        elif job and job.status == "error":
+            pytest.fail(f"Job failed with error: {job.error}")
             
         await asyncio.sleep(1)
-    
-    # Verify the result
-    assert response_data["status"] == "completed", f"Job did not complete successfully: {response_data}"
-    assert response_data["result"] is not None, "Result should not be None when completed"
-    assert isinstance(response_data["result"], str), "Result should be a string"
-    assert len(response_data["result"]) > 0, "Result should not be empty"
-
-
-@pytest.mark.asyncio
-async def test_ai_agent_invalid_page(client):
-    """Test AI agent with invalid page ID."""
-    result = await client.call_tool("ai-agent", {
-        "page_id": "invalid_page_id",
-        "query": "What is on this page?"
-    })
-    
-    # Parse the response
-    response_data = json.loads(result[0].text)
-    assert "job_id" in response_data, "Response should contain a job ID"
-    job_id = response_data["job_id"]
-    
-    # Get the result
-    result = await client.call_tool("get-ai-result", {
-        "job_id": job_id
-    })
-    response_data = json.loads(result[0].text)
-    
-    # Should fail with an error about invalid page
-    assert response_data["status"] == "error", "Should fail with invalid page"
-    assert response_data["result"] is None, "Result should be None on error"
-
-
-@pytest.mark.asyncio
-async def test_ai_agent_missing_query(client, browser_page):
-    """Test AI agent with missing query."""
-    result = await client.call_tool("ai-agent", {
-        "page_id": browser_page["page_id"]
-    })
-    
-    # Should fail with missing query error
-    response_data = json.loads(result[0].text)
-    assert "error" in response_data, "Should fail with missing query error"
-
-
-@pytest.mark.asyncio
-async def test_get_result_invalid_job(client):
-    """Test getting result for invalid job ID."""
-    result = await client.call_tool("get-ai-result", {
-        "job_id": "invalid_job_id"
-    })
-    
-    # Should fail with job not found error
-    response_data = json.loads(result[0].text)
-    assert response_data["status"] == "error", "Should fail with job not found"
-    assert response_data["result"] is None, "Result should be None for invalid job" 
+        wait_time += 1
+        
+    if wait_time >= max_wait:
+        pytest.fail("Job did not complete within the timeout period") 

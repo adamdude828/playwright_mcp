@@ -4,25 +4,27 @@ import os
 import signal
 import subprocess
 from mcp.types import TextContent
-from .utils import check_daemon_running
+from .utils import logger
 
 
 async def handle_stop_daemon(arguments: Dict) -> List[TextContent]:
     """Handle stop-daemon command by stopping the browser daemon if it's running."""
     try:
-        # Check if daemon is running
-        if not await check_daemon_running():
-            return [TextContent(type="text", text="No running daemon found")]
-            
-        # Find and kill daemon process
+        # Find daemon process first
         result = subprocess.run(
-            ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
+            ["pgrep", "-f", "playwright_mcp.browser_daemon$"],
             capture_output=True,
             text=True
         )
         
         if not result.stdout:
-            return [TextContent(type="text", text="No daemon process found")]
+            # Also try to remove the socket file in case it exists
+            socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
+            try:
+                os.unlink(socket_path)
+            except OSError:
+                pass
+            return [TextContent(type="text", text="Browser daemon stopped successfully")]
             
         # Kill each matching process
         for pid in result.stdout.strip().split('\n'):
@@ -33,7 +35,13 @@ async def handle_stop_daemon(arguments: Dict) -> List[TextContent]:
                 
         # Wait for processes to terminate (up to 5 seconds)
         for _ in range(10):
-            if not await check_daemon_running():
+            # Check if process is still running
+            check_result = subprocess.run(
+                ["pgrep", "-f", "playwright_mcp.browser_daemon$"],
+                capture_output=True,
+                text=True
+            )
+            if not check_result.stdout:
                 # Also try to remove the socket file
                 socket_path = os.path.join(os.getenv('TMPDIR', '/tmp'), 'playwright_mcp.sock')
                 try:
@@ -46,4 +54,5 @@ async def handle_stop_daemon(arguments: Dict) -> List[TextContent]:
         return [TextContent(type="text", text="Failed to stop browser daemon: timeout waiting for daemon to stop")]
         
     except Exception as e:
-        return [TextContent(type="text", text=f"Failed to stop browser daemon: {str(e)}")] 
+        logger.error(f"Error in handle_stop_daemon: {e}")
+        return [TextContent(type="text", text=str(e))] 

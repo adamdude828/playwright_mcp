@@ -1,10 +1,10 @@
-from typing import Dict, Any, Optional
+"""AI agent handler module."""
+from typing import Dict, Any
 import asyncio
 
 from ..core.logging import setup_logging
 from .base import BaseHandler
 from ..tools.handlers.ai_agent.tools import create_agent
-from ..daemon import BrowserDaemon
 
 logger = setup_logging("ai_agent_handler")
 

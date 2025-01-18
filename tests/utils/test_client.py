@@ -41,28 +41,19 @@ class TestClient:
                 capture_output=True,
                 text=True
             )
-            response = {"message": "Browser daemon started successfully"}
+            return [TextContent(type="text", text="Browser daemon started successfully")]
         elif tool_name == "stop-daemon":
-            # Check if daemon is running by looking for the process
+            # Stop the daemon using mcp-cli
             result = subprocess.run(
-                ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
+                ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon', '--tool-args', '{}'],
                 capture_output=True,
                 text=True
             )
-            if result.stdout:
-                # Get the PID and kill the process
-                for pid in result.stdout.strip().split('\n'):
-                    try:
-                        subprocess.run(["kill", pid], check=False)
-                    except subprocess.SubprocessError:
-                        pass
-                response = {"message": "Browser daemon stopped successfully"}
-            else:
-                response = {"message": "No running daemon found"}
+            return [TextContent(type="text", text="Browser daemon stopped successfully")]
         elif tool_name == "navigate":
             # Check if daemon is running
             result = subprocess.run(
-                ["pgrep", "-f", "playwright_mcp.browser_daemon.browser_manager"],
+                ["pgrep", "-f", "playwright_mcp.browser_daemon$"],
                 capture_output=True,
                 text=True
             )

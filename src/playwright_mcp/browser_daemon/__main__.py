@@ -13,6 +13,7 @@ async def main():
     logger.info("Starting browser manager")
     manager = BrowserManager()
     await manager.start()
+    await asyncio.Event().wait()  # Keep the daemon running
     logger.info("Browser manager started")
 
 

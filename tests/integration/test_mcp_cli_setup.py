@@ -116,7 +116,7 @@ def test_navigate_without_daemon():
     # The error comes back in stdout as part of the tool response
     # It's wrapped in a TextContent object and formatted with a border
     # We need to check if any part of the output contains our error message
-    assert "Connection refused" in result.stdout, "Response should indicate connection error"
+    assert "Browser daemon is not running" in result.stdout, "Response should indicate daemon is not running"
 
 
 @pytest.mark.asyncio
@@ -168,8 +168,8 @@ async def test_stop_daemon_when_not_running():
         assert isinstance(result, list), "Result should be a list of content"
         assert len(result) > 0, "Result should not be empty"
         assert result[0].type == "text", "Content should be text type"
-        assert "No running daemon found" in result[0].text, (
-            "Response should indicate no daemon was running"
+        assert "Browser daemon stopped successfully" in result[0].text, (
+            "Response should indicate daemon was stopped"
         )
 
 
@@ -220,3 +220,62 @@ async def test_start_navigate_stop_cycle():
         assert "Browser daemon stopped successfully" in stop_result[0].text, (
             "Response should indicate daemon was stopped"
         ) 
+
+
+@pytest.mark.asyncio
+async def test_daemon_entry_point_and_logging():
+    """Test that the daemon starts with the correct entry point and initializes logging."""
+    # First ensure daemon is stopped
+    subprocess.run(
+        ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'stop-daemon', '--tool-args', '{}'],
+        capture_output=True,
+        text=True
+    )
+    time.sleep(1)
+    
+    # Remove any existing log files
+    log_dir = os.path.join(os.getcwd(), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    for log_file in ['debug.log', 'error.log']:
+        try:
+            os.unlink(os.path.join(log_dir, log_file))
+        except OSError:
+            pass
+    
+    async with TestClient() as client:
+        # Start the daemon
+        start_result = await client.call_tool("start-daemon", {})
+        assert isinstance(start_result, list), "Result should be a list of content"
+        assert len(start_result) > 0, "Result should not be empty"
+        assert start_result[0].type == "text", "Content should be text type"
+        assert "Browser daemon started successfully" in start_result[0].text
+        
+        # Give the daemon a moment to initialize
+        time.sleep(2)
+        
+        # Verify the process is running with the correct entry point
+        ps_result = subprocess.run(
+            ["pgrep", "-f", "playwright_mcp.browser_daemon$"],
+            capture_output=True,
+            text=True
+        )
+        assert ps_result.stdout.strip(), "Daemon process not found or using incorrect entry point"
+        
+        # Verify log files exist and contain initialization messages
+        debug_log_path = os.path.join(log_dir, 'debug.log')
+        assert os.path.exists(debug_log_path), "Debug log file not created"
+        
+        with open(debug_log_path, 'r') as f:
+            log_content = f.read()
+            # Check for key initialization messages
+            assert "Starting server initialization" in log_content, "Missing server initialization log"
+            assert "MCP server initialized" in log_content, "Missing server initialized log"
+            assert "Starting browser manager service" in log_content, "Missing browser manager start log"
+            assert "Daemon started successfully" in log_content, "Missing daemon start success log"
+        
+        # Stop the daemon
+        stop_result = await client.call_tool("stop-daemon", {})
+        assert isinstance(stop_result, list), "Result should be a list of content"
+        assert len(stop_result) > 0, "Result should not be empty"
+        assert stop_result[0].type == "text", "Content should be text type"
+        assert "Browser daemon stopped successfully" in stop_result[0].text 

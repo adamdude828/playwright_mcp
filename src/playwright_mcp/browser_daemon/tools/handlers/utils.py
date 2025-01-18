@@ -146,7 +146,7 @@ async def start_daemon() -> None:
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             '-m',
-            'playwright_mcp.browser_daemon.browser_manager',
+            'playwright_mcp.browser_daemon',
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
