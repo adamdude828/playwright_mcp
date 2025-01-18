@@ -87,9 +87,9 @@ jobs:
           echo "MCP CLI config location:"
           ls -la ~/.mcp-cli/
           
-          # Start daemon and verify it's running
-          poetry run mcp-cli --server playwright call-tool --tool start-daemon --tool-args '{}'
-          sleep 2
+          # Start daemon in background and wait for it to initialize
+          poetry run python -m playwright_mcp.browser_daemon &
+          sleep 5  # Give daemon time to initialize
           
           # Check daemon process
           echo "Checking daemon process with different patterns:"
