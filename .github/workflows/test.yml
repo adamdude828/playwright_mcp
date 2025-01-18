@@ -86,7 +86,31 @@ jobs:
           echo "Log level: $LOG_LEVEL"
           echo "MCP CLI config location:"
           ls -la ~/.mcp-cli/
-          # Run tests
+          
+          # Start daemon and verify it's running
+          poetry run mcp-cli --server playwright call-tool --tool start-daemon --tool-args '{}'
+          sleep 2
+          
+          # Check daemon process
+          echo "Checking daemon process with different patterns:"
+          echo "Pattern 1 (browser_daemon$):"
+          pgrep -f "playwright_mcp.browser_daemon$" || true
+          echo "Pattern 2 (browser_daemon.browser_manager):"
+          pgrep -f "playwright_mcp.browser_daemon.browser_manager" || true
+          
+          # Check socket file
+          echo "Checking socket file:"
+          ls -la /tmp/playwright_mcp.sock || true
+          
+          # Check logs
+          echo "Checking logs:"
+          ls -la logs/
+          echo "Debug log contents:"
+          cat logs/debug.log || true
+          echo "Error log contents:"
+          cat logs/error.log || true
+          
+          # Run test
           poetry run pytest tests/integration/test_execute_js.py::test_execute_simple_js -v
         
       - name: Cleanup Services
