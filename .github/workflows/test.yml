@@ -9,6 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TMPDIR: /tmp
+      PYTHONPATH: ${{ github.workspace }}/src
+    permissions:
+      contents: read
+      
     steps:
       - uses: actions/checkout@v4
       
@@ -58,7 +64,12 @@ jobs:
             }
           }
           EOF
-        
+          
+      - name: Create logs directory
+        run: |
+          mkdir -p logs
+          chmod 777 logs
+          
       - name: Run unit tests
         run: |
           poetry run pytest tests/unit/ -v
