@@ -1,9 +1,10 @@
 """Tests for AI agent handlers."""
 
 import pytest
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock
 from datetime import datetime
 import asyncio
+from unittest.mock import patch
 
 from playwright_mcp.browser_daemon.tools.handlers.ai_agent.job_store import JobStore, job_store, JobStatus
 from playwright_mcp.browser_daemon.tools.handlers.ai_agent.handler import handle_ai_agent
@@ -220,8 +221,15 @@ async def test_handle_ai_agent_missing_query():
 
 
 @pytest.mark.asyncio
-async def test_handle_ai_agent_success():
+@patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.handler.send_to_manager")
+async def test_handle_ai_agent_success(mock_send):
     """Test successful AI agent job creation."""
+    # Mock successful response from send_to_manager
+    mock_send.return_value = {
+        "job_id": "test_job_123",
+        "message": "AI agent job started successfully"
+    }
+    
     result = await handle_ai_agent({
         "page_id": "test_page",
         "query": "test query"
@@ -231,9 +239,15 @@ async def test_handle_ai_agent_success():
 
 
 @pytest.mark.asyncio
-async def test_handle_ai_agent_with_daemon():
+@patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.handler.send_to_manager")
+async def test_handle_ai_agent_with_daemon(mock_send):
     """Test AI agent handler with daemon parameter."""
     mock_daemon = Mock()
+    mock_send.return_value = {
+        "job_id": "test_job_123",
+        "message": "AI agent job started successfully"
+    }
+    
     result = await handle_ai_agent({
         "page_id": "test_page",
         "query": "test query"
@@ -251,12 +265,13 @@ async def test_handle_get_ai_result_missing_job_id():
 
 
 @pytest.mark.asyncio
-async def test_handle_get_ai_result_not_found():
+@patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.get_result.send_to_manager")
+async def test_handle_get_ai_result_not_found(mock_send):
     """Test get-ai-result handler with non-existent job."""
     mock_daemon = Mock()
-    mock_daemon.job_store = Mock()
-    mock_daemon.job_store.get_job_status = AsyncMock(side_effect=ValueError("Job not found"))
-    mock_daemon.job_store.get_job_result = AsyncMock(side_effect=ValueError("Job not found"))
+    mock_send.return_value = {
+        "error": "Job not found: non_existent"
+    }
     
     result = await handle_get_ai_result({
         "job_id": "non_existent"
@@ -266,20 +281,22 @@ async def test_handle_get_ai_result_not_found():
 
 
 @pytest.mark.asyncio
-async def test_handle_get_ai_result_success():
+@patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.get_result.send_to_manager")
+async def test_handle_get_ai_result_success(mock_send):
     """Test successful retrieval of job result."""
-    # Create a mock daemon with mock job store
     mock_daemon = Mock()
-    mock_daemon.job_store = Mock()
-    mock_daemon.job_store.get_job_status = AsyncMock(return_value="completed")
-    mock_daemon.job_store.get_job_result = AsyncMock(return_value={"test": "result"})
-
+    mock_send.return_value = {
+        "job_id": "test_job_123",
+        "status": "completed",
+        "result": {"test": "result"}
+    }
+    
     result = await handle_get_ai_result({
         "job_id": "test_job"
     }, daemon=mock_daemon)
     
     assert result["isError"] is False
-    assert result["job_status"] == "completed"
+    assert result["status"] == "completed"
     assert result["result"] == {"test": "result"}
 
 
@@ -290,4 +307,4 @@ async def test_handle_get_ai_result_without_daemon():
         "job_id": "test_job"
     })
     assert result["isError"] is True
-    assert "job_store" in result["error"].lower() 
+    assert "browser daemon is not running" in result["error"].lower() 

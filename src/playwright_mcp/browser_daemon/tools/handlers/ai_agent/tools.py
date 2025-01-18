@@ -33,6 +33,9 @@ class ExploreDOMInput(BaseModel):
 async def search_dom(ctx: RunContext[str], input: SearchDOMInput) -> str:
     """Search for elements in the DOM using a selector or text content."""
     page = await session_manager.get_page(ctx.deps)
+    if not page:
+        raise ValueError(f"Page {ctx.deps} not found")
+        
     if input.selector:
         elements = await page.query_selector_all(input.selector)
     elif input.text:
@@ -51,48 +54,74 @@ async def search_dom(ctx: RunContext[str], input: SearchDOMInput) -> str:
 
 
 async def interact_dom(ctx: RunContext[str], input: InteractDOMInput) -> str:
-    """Interact with elements in the DOM (click, type, hover)."""
+    """Interact with elements in the DOM."""
     page = await session_manager.get_page(ctx.deps)
+    if not page:
+        raise ValueError(f"Page {ctx.deps} not found")
+        
     element = await page.query_selector(input.selector)
     if not element:
         return f"No element found with selector: {input.selector}"
-
+    
     try:
         if input.action == "click":
             await element.click()
-        elif input.action == "type" and input.value:
+            return "Successfully performed click"
+        elif input.action == "type":
+            if not input.value:
+                return "Value required for type action"
             await element.type(input.value)
-        elif input.action == "hover":
-            await element.hover()
+            return "Successfully performed type"
         else:
-            return f"Unsupported action: {input.action}"
-        return f"Successfully performed {input.action} on element"
+            return f"Unknown action: {input.action}"
     except Exception as e:
-        return f"Error performing {input.action}: {str(e)}"
+        return f"Action failed: {str(e)}"
 
 
 async def explore_dom(ctx: RunContext[str], input: ExploreDOMInput) -> str:
     """Explore and return the DOM structure."""
     page = await session_manager.get_page(ctx.deps)
+    if not page:
+        raise ValueError(f"Page {ctx.deps} not found")
+        
     if input.selector:
         element = await page.query_selector(input.selector)
         if not element:
             return f"No element found with selector: {input.selector}"
-        html = await element.evaluate("el => el.outerHTML")
+        root = element
     else:
-        html = await page.content()
+        root = await page.query_selector("body")
+        if not root:
+            return "Could not find body element"
     
-    if not input.include_text:
-        # Could add logic to strip text content if needed
-        pass
+    structure = []
+
+    async def build_structure(element, depth=0):
+        tag = await element.evaluate("el => el.tagName.toLowerCase()")
+        indent = "  " * depth
         
-    return html
+        if input.include_text:
+            text = await element.text_content()
+            text = text.strip() if text else ""
+            if text:
+                structure.append(f"{indent}<{tag}>{text}</{tag}>")
+            else:
+                structure.append(f"{indent}<{tag}/>")
+        else:
+            structure.append(f"{indent}<{tag}/>")
+        
+        children = await element.query_selector_all(":scope > *")
+        for child in children:
+            await build_structure(child, depth + 1)
+    
+    await build_structure(root)
+    return "\n".join(structure)
 
 
 def create_agent(page_id: str) -> Agent:
     """Create a new AI agent with the defined tools."""
     agent = Agent(
-        model="anthropic:claude-3-sonnet-20240229",
+        model="claude-3-5-sonnet-latest",
         deps_type=str,  # page_id as dependency
         system_prompt="""You are a web automation assistant that uses Playwright to interact with web pages.
         You have access to tools that map directly to Playwright operations.

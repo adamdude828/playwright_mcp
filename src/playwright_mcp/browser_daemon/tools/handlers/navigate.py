@@ -1,23 +1,40 @@
-from typing import Dict, List
-from mcp.types import TextContent
-from .utils import create_response, send_to_manager
+"""Handler for navigation requests."""
+
+from .utils import send_to_manager
 
 
-async def handle_navigate(arguments: Dict) -> List[TextContent]:
-    """Handle navigate command by navigating to a URL in a new or existing session."""
+async def handle_navigate(args: dict, daemon=None) -> dict:
+    """Handle navigate request."""
+    # Check required arguments
+    if "url" not in args:
+        return {
+            "status": "error",
+            "isError": True,
+            "error": "Missing required argument: url"
+        }
+
     try:
-        # Send navigate command to browser manager
-        result = await send_to_manager("navigate", arguments)
+        result = await send_to_manager("navigate", args)
         
-        # Format response with expected field names
-        response_data = {
+        if "error" in result:
+            return {
+                "status": "error",
+                "isError": True,
+                "error": result["error"]
+            }
+            
+        return {
             "session_id": result["session_id"],
             "page_id": result["page_id"],
-            "created_session": result["created_session"],
-            "created_page": result["created_page"]
+            "created_session": result.get("created_session", True),
+            "created_page": result.get("created_page", True),
+            "isError": False
         }
         
-        return [TextContent(type="text", text=str(response_data))]
-        
     except Exception as e:
-        return [TextContent(type="text", text=str(e))] 
+        error_msg = str(e)
+        return {
+            "status": "error",
+            "isError": True,
+            "error": error_msg
+        } 

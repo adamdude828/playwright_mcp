@@ -26,9 +26,8 @@ Example:
 import asyncio
 import json
 import os
-import subprocess
 import sys
-from typing import Dict
+from typing import Dict, Any
 from playwright.async_api import Page
 from mcp.types import TextContent
 from ....utils.logging import setup_logging
@@ -119,7 +118,23 @@ async def start_daemon() -> None:
     # Set up the Python path to include the src directory
     env = os.environ.copy()
     env['PYTHONPATH'] = src_dir
-    env['LOG_LEVEL'] = 'INFO'  # Use INFO level by default
+    
+    # Load .env file from project root
+    env_path = os.path.join(project_root, '.env')
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    env[key.strip()] = value.strip().strip('"\'')
+    
+    # Ensure LOG_LEVEL is set for the daemon process
+    if 'LOG_LEVEL' in os.environ:
+        logger.debug(f"Setting daemon LOG_LEVEL to {os.environ['LOG_LEVEL']}")
+        env['LOG_LEVEL'] = os.environ['LOG_LEVEL']
+    else:
+        logger.debug("No LOG_LEVEL set, defaulting to INFO")
+        env['LOG_LEVEL'] = 'INFO'
     
     # Create logs directory if needed
     logs_dir = os.path.join(project_root, 'logs')
@@ -127,21 +142,51 @@ async def start_daemon() -> None:
     
     # Start the daemon as a background process
     try:
-        process = subprocess.Popen(
-            [sys.executable, '-m', 'playwright_mcp.browser_daemon.browser_manager'],
-            stdout=subprocess.DEVNULL,  # Don't capture output to avoid blocking
-            stderr=subprocess.DEVNULL,
+        # Start process with async subprocess
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            '-m',
+            'playwright_mcp.browser_daemon.browser_manager',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
             env=env,
             cwd=project_root
         )
         
         logger.info("Daemon start command issued")
         
+        # Create an async task to read and log output
+        async def log_output():
+            while True:
+                # Check if process has ended
+                if process.returncode is not None:
+                    break
+                
+                # Read output (with timeout to prevent blocking)
+                try:
+                    stdout_data = await asyncio.wait_for(process.stdout.readline(), timeout=0.1)
+                    if stdout_data:
+                        logger.debug(f"Daemon stdout: {stdout_data.decode().strip()}")
+                except asyncio.TimeoutError:
+                    pass
+                
+                try:
+                    stderr_data = await asyncio.wait_for(process.stderr.readline(), timeout=0.1)
+                    if stderr_data:
+                        logger.error(f"Daemon stderr: {stderr_data.decode().strip()}")
+                except asyncio.TimeoutError:
+                    pass
+                
+                await asyncio.sleep(0.1)
+        
+        # Start logging task
+        asyncio.create_task(log_output())
+        
         # Give the process a moment to start
         await asyncio.sleep(1)
         
         # Verify the process is still running
-        if process.poll() is not None:
+        if process.returncode is not None:
             raise Exception(f"Daemon process exited immediately with code {process.returncode}")
             
         # Wait for the socket to become available (up to 5 seconds)
@@ -203,54 +248,51 @@ async def send_to_manager(command: str, args: dict) -> dict:
         response = await reader.read(1024 * 1024)  # 1MB buffer
         if b'\n' in response:
             response = response.split(b'\n')[0]  # Take everything up to first newline
-        response_data = json.loads(response.decode())
-        logger.debug(f"Received response: {response_data}")
-
+            
         writer.close()
         await writer.wait_closed()
-        
-        if "error" in response_data:
-            raise ValueError(response_data["error"])
-            
-        return response_data
-    except (ConnectionRefusedError, FileNotFoundError):
-        raise Exception("Browser daemon is not running. Please call the 'start-daemon' tool first.")
+
+        # Parse response
+        try:
+            response_text = response.decode()
+            logger.debug(f"Received response: {response_text}")
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            # Try to fix Python-style single quotes
+            response_text = response_text.replace("'", '"')
+            return json.loads(response_text)
+
     except Exception as e:
-        raise Exception(str(e))
+        logger.error(f"Error sending command to browser manager: {e}")
+        raise
 
 
-def create_response(text: str | dict, is_error: bool = False) -> dict:
-    """Create a standard MCP-compliant response.
-    
-    Formats the given text or data into an MCP protocol response object with
-    appropriate content type and error status.
+def create_response(data: Any, is_error: bool = False) -> dict:
+    """Create a standardized MCP response dictionary.
     
     Args:
-        text: The response text or data dictionary to format
-        is_error: Whether this response represents an error condition
+        data: The response data or error message
+        is_error: Whether this is an error response
         
     Returns:
-        dict: An MCP-compliant response object with structure:
-            {
-                "isError": bool,
-                "content": [
-                    {
-                        "type": "text",
-                        "text": str
-                    }
-                ]
-            }
-            
-    Note:
-        Dictionary inputs are automatically serialized to JSON strings.
-        All responses use type="text" as per MCP protocol requirements.
+        dict: A standardized MCP response with isError and content array
     """
-    if isinstance(text, dict):
-        content = [TextContent(type="text", text=json.dumps(text, indent=2))]
-    else:
-        content = [TextContent(type="text", text=str(text))]
-        
-    return {
+    response = {
         "isError": is_error,
-        "content": content
+        "content": []
     }
+
+    if isinstance(data, dict):
+        # For dictionaries, convert to JSON string
+        response["content"].append(TextContent(
+            type="text",
+            text=json.dumps(data)
+        ))
+    else:
+        # For everything else, convert to string
+        response["content"].append(TextContent(
+            type="text",
+            text=str(data)
+        ))
+
+    return response

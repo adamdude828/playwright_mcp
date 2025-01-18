@@ -1,5 +1,6 @@
 import re
 import pytest
+import json
 from tests.utils.test_client import TestClient
 
 
@@ -36,7 +37,7 @@ async def test_navigate_returns_session_and_page_ids():
         assert result[0].type == "text", "Content should be text type"
         
         # Parse the response data
-        data = eval(result[0].text)
+        data = json.loads(result[0].text)
         
         # Verify response contains session and page IDs
         assert 'session_id' in data, "Response should include session ID"
@@ -66,7 +67,7 @@ async def test_navigate_reuses_session():
         assert result[0].type == "text", "Content should be text type"
         
         # Parse the response data
-        data = eval(result[0].text)
+        data = json.loads(result[0].text)
         
         # Get session ID from first navigation
         assert 'session_id' in data, "Response should include session ID"
@@ -88,7 +89,7 @@ async def test_navigate_reuses_session():
         assert result[0].type == "text", "Content should be text type"
         
         # Parse the response data
-        data = eval(result[0].text)
+        data = json.loads(result[0].text)
         
         # Verify session was reused
         assert data['session_id'] == session_id, "Should reuse the same session ID"

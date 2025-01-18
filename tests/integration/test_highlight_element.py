@@ -1,6 +1,7 @@
 """Integration tests for the highlight-element functionality."""
 import pytest
 import os
+import json
 from tests.utils.test_client import TestClient
 
 
@@ -22,7 +23,7 @@ async def browser_page(client):
     result = await client.call_tool("navigate", {"url": "about:blank"})
     
     # Parse the nested response data
-    response_data = eval(result[0].text)
+    response_data = json.loads(result[0].text)
     
     yield {
         "session_id": response_data["session_id"],

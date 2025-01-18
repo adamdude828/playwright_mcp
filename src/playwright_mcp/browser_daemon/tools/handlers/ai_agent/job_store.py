@@ -5,10 +5,10 @@ from typing import Dict, Optional, Any
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from ....core.logging import setup_logging
 
 # Configure logging
-logger = logging.getLogger("job_store")
+logger = setup_logging("job_store")
 
 
 @dataclass
@@ -34,6 +34,7 @@ class JobStore:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(JobStore, cls).__new__(cls)
+            logger.info("Created new JobStore instance")
         return cls._instance
     
     def __init__(self):
@@ -73,47 +74,66 @@ class JobStore:
             raise ValueError(f"Job {job_id} not found")
         return job.status
     
-    async def get_job_result(self, job_id: str) -> Any:
-        """Get the result of a job."""
+    async def get_job_result(self, job_id: str) -> dict:
+        """Get the result of a job.
+        
+        Returns a dictionary containing:
+        - job_id: The ID of the job
+        - status: The current status ("pending", "running", "completed", "error")
+        - result: The result if completed, or None
+        - error: The error message if failed, or None
+        """
         job = self.get_job(job_id)
         if not job:
             raise ValueError(f"Job {job_id} not found")
-        return job.result
+            
+        response = {
+            "job_id": job.id,
+            "status": job.status,
+            "result": job.result
+        }
+        
+        if job.status == "error":
+            response["error"] = job.error
+            
+        return response
     
     def set_task(self, job_id: str, task: asyncio.Task) -> None:
-        """Associate an asyncio task with a job."""
+        """Set the task for a job."""
         self._tasks[job_id] = task
         logger.info(f"Set task for job {job_id}")
     
-    def complete_job(self, job_id: str, result: Any) -> None:
-        """Mark a job as completed with its result."""
-        if job_id in self._jobs:
-            self._jobs[job_id].status = "completed"
-            self._jobs[job_id].result = result
-            self._jobs[job_id].completed_at = datetime.now()
-            logger.info(f"Completed job {job_id} with result")
-            logger.debug(f"Result: {result}")
-        else:
-            logger.error(f"Attempted to complete nonexistent job {job_id}")
-    
-    def fail_job(self, job_id: str, error: str) -> None:
-        """Mark a job as failed with an error message."""
-        if job_id in self._jobs:
-            self._jobs[job_id].status = "error"
-            self._jobs[job_id].error = error
-            self._jobs[job_id].completed_at = datetime.now()
-            logger.error(f"Failed job {job_id} with error: {error}")
-        else:
-            logger.error(f"Attempted to fail nonexistent job {job_id}") 
+    def get_task(self, job_id: str) -> Optional[asyncio.Task]:
+        """Get the task for a job."""
+        return self._tasks.get(job_id)
     
     def set_running(self, job_id: str) -> None:
         """Set a job's status to running."""
-        if job := self._jobs.get(job_id):
+        job = self.get_job(job_id)
+        if job:
             job.status = "running"
-            logger.info(f"Set job {job_id} status to running")
-        else:
-            logger.warning(f"Cannot set running status - job {job_id} not found")
+            logger.info(f"Set job {job_id} to running")
+    
+    def complete_job(self, job_id: str, result: Any) -> None:
+        """Complete a job with its result."""
+        job = self.get_job(job_id)
+        if job:
+            job.status = "completed"
+            job.result = result
+            job.completed_at = datetime.now()
+            logger.info(f"Completed job {job_id} with result")
+            logger.debug(f"Result: {result}")
+    
+    def fail_job(self, job_id: str, error: str) -> None:
+        """Mark a job as failed with an error message."""
+        job = self.get_job(job_id)
+        if job:
+            job.status = "error"
+            job.error = error
+            job.completed_at = datetime.now()
+            logger.error(f"Job {job_id} failed: {error}")
 
 
 # Create singleton instance
-job_store = JobStore() 
+job_store = JobStore()
+logger.info("Created job_store singleton instance") 

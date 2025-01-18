@@ -165,7 +165,7 @@ async def test_interact_dom_type(mock_page, mock_context):
     with patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.tools.session_manager") as mock_session_manager:
         get_page_future = asyncio.Future()
         get_page_future.set_result(mock_page)
-        mock_session_manager.get_page = AsyncMock(return_value=get_page_future.result())
+        mock_session_manager.get_page = Mock(return_value=get_page_future)
 
         # Call the function
         result = await interact_dom(
@@ -174,7 +174,7 @@ async def test_interact_dom_type(mock_page, mock_context):
         )
 
         # Verify the result
-        assert result is not None
+        assert result == "Successfully performed type"
         mock_page.query_selector.assert_awaited_with("test-selector")
         mock_element.type.assert_awaited_with("test text")
 
@@ -188,11 +188,20 @@ async def test_explore_dom(mock_page, mock_context):
     content_future.set_result("<html><body><h1>Title</h1><p>Content</p></body></html>")
     mock_page.content.return_value = content_future.result()
 
+    # Set up mock body element
+    mock_body = Mock()
+    mock_body.evaluate = AsyncMock(return_value="body")
+    mock_body.text_content = AsyncMock(return_value="")
+    mock_body.query_selector_all = AsyncMock(return_value=[])
+
+    # Set up mock page query_selector
+    mock_page.query_selector = AsyncMock(return_value=mock_body)
+
     # Mock session manager
     with patch("playwright_mcp.browser_daemon.tools.handlers.ai_agent.tools.session_manager") as mock_session_manager:
         get_page_future = asyncio.Future()
         get_page_future.set_result(mock_page)
-        mock_session_manager.get_page = AsyncMock(return_value=get_page_future.result())
+        mock_session_manager.get_page = Mock(return_value=get_page_future)
 
         # Call the function
         result = await explore_dom(
@@ -202,9 +211,9 @@ async def test_explore_dom(mock_page, mock_context):
 
         # Verify the result
         assert result is not None
-        assert "Title" in str(result)
-        assert "Content" in str(result)
-        mock_page.content.assert_awaited_once()
+        assert "<body/>" in result
+        mock_page.query_selector.assert_awaited_with("body")
+        mock_body.evaluate.assert_awaited_with("el => el.tagName.toLowerCase()")
 
 
 def test_create_agent():

@@ -15,11 +15,11 @@ class ToolHandler:
         """Decorator to register a tool handler with Pydantic validation."""
         def decorator(func):
             @wraps(func)
-            async def wrapper(arguments: Dict[str, Any]) -> Dict[str, Any]:
+            async def wrapper(arguments: Dict[str, Any], daemon=None) -> Dict[str, Any]:
                 # Validate input using Pydantic
                 try:
                     validated_args = cls.input_model(**arguments)
-                    result = await func(validated_args)
+                    result = await func(validated_args, daemon=daemon)
                     return {
                         "content": [
                             TextContent(

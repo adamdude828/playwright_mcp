@@ -1,8 +1,9 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from ..core.session import SessionManager
 from ..core.logging import setup_logging
 from .base import BaseHandler
+from ..daemon import BrowserDaemon
 
 logger = setup_logging("navigation_handler")
 
@@ -92,4 +93,44 @@ class NavigationHandler(BaseHandler):
 
         except Exception as e:
             logger.error(f"New tab creation failed: {e}")
-            return {"error": str(e)} 
+            return {"error": str(e)}
+
+    async def handle_navigate(self, args: dict, daemon: Optional[BrowserDaemon] = None) -> dict:
+        """Handle navigation command."""
+        if not daemon:
+            return {
+                "error": "Browser daemon is not running. Please call the 'start-daemon' tool first.",
+                "isError": True
+            }
+
+        # Validate required arguments
+        if "url" not in args:
+            return {
+                "error": "Missing required argument: url",
+                "isError": True
+            }
+
+        url = args["url"]
+        wait_until = args.get("wait_until", "load")
+
+        try:
+            # Create new session and page if needed
+            session = await daemon.session_manager.create_session()
+            page = await session.create_page()
+
+            # Navigate to URL
+            await page.goto(url, wait_until=wait_until)
+
+            return {
+                "session_id": session.id,
+                "page_id": page.id,
+                "created_session": True,
+                "created_page": True,
+                "isError": False
+            }
+
+        except Exception as e:
+            return {
+                "error": f"Failed to navigate: {str(e)}",
+                "isError": True
+            } 

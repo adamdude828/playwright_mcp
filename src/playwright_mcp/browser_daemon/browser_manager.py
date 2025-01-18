@@ -8,23 +8,21 @@ from .handlers.dom import DOMHandler
 from .handlers.screenshot import ScreenshotHandler
 from .handlers.session import SessionHandler
 from .handlers.interaction import InteractionHandler
-from .tools.handlers.ai_agent.handler import AIAgentHandler
-from .tools.handlers.ai_agent.get_result import GetAIResultHandler
-from .daemon import BrowserDaemon
+from .handlers.ai_agent import AIAgentHandler
+from .handlers.get_result import GetResultHandler
+from .tools.handlers.ai_agent.job_store import job_store
 
 logger = setup_logging("browser_manager")
 
 
 class BrowserManager:
     def __init__(self):
-        # Initialize the browser daemon
-        self.daemon = BrowserDaemon()
-        
         # Use the shared session manager instance
         self.session_manager = session_manager
         logger.debug(f"BrowserManager using session manager instance: {id(self.session_manager)}")
         
         self.server = UnixSocketServer()
+        self.job_store = job_store  # Use the singleton job store instance
         
         # Initialize handlers with the same session manager instance
         nav_handler = NavigationHandler(self.session_manager)
@@ -32,8 +30,8 @@ class BrowserManager:
         screenshot_handler = ScreenshotHandler(self.session_manager)
         session_handler = SessionHandler(self.session_manager)
         interaction_handler = InteractionHandler(self.session_manager)
-        ai_agent_handler = AIAgentHandler()
-        get_ai_result_handler = GetAIResultHandler()
+        ai_agent_handler = AIAgentHandler(self.session_manager)
+        get_result_handler = GetResultHandler(self.session_manager)
 
         # Map commands to handlers and whether they need daemon access
         self.handlers = {
@@ -59,7 +57,7 @@ class BrowserManager:
             
             # AI agent commands
             "ai-agent": {"handler": ai_agent_handler, "needs_daemon": True},
-            "get-ai-result": {"handler": get_ai_result_handler, "needs_daemon": True}
+            "get-ai-result": {"handler": get_result_handler, "needs_daemon": True}
         }
 
     async def handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -83,7 +81,7 @@ class BrowserManager:
                     args["command"] = command
                     # Only pass daemon to handlers that need it
                     if handler_info["needs_daemon"]:
-                        response = await handler_info["handler"].handle(args, daemon=self.daemon)
+                        response = await handler_info["handler"].handle(args, daemon=self)
                     else:
                         response = await handler_info["handler"].handle(args)
             
@@ -103,7 +101,7 @@ class BrowserManager:
         """Shutdown the browser manager service."""
         logger.info("Shutting down browser manager service")
         await self.session_manager.shutdown()
-        self.server.cleanup()
+        await self.server.cleanup()
 
 
 async def main():

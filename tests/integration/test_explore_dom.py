@@ -1,6 +1,7 @@
 """Tests for DOM exploration functionality."""
 import pytest
 from tests.utils.test_client import TestClient
+import json
 
 
 @pytest.fixture
@@ -12,9 +13,9 @@ async def client():
         yield client
 
 
-def extract_page_id(response: list) -> str:
-    """Extract page ID from navigation response text."""
-    data = eval(response[0].text)
+def extract_page_id(response):
+    """Extract page_id from a response."""
+    data = json.loads(response[0].text)
     return data["page_id"]
 
 
