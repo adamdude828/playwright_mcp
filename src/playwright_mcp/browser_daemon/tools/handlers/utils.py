@@ -29,7 +29,7 @@ import os
 import sys
 from typing import Dict, Any
 from playwright.async_api import Page
-from mcp.types import TextContent
+from mcp.types import TextContent, EmbeddedResource, TextResourceContents
 from ....utils.logging import setup_logging
 
 
@@ -266,31 +266,42 @@ async def send_to_manager(command: str, args: dict) -> dict:
 
 
 def create_response(data: Any, is_error: bool = False) -> dict:
-    """Create a standardized MCP response dictionary.
+    """Create a standardized MCP text response dictionary.
     
     Args:
-        data: The response data or error message
+        data: The response data or error message (will be converted to string)
         is_error: Whether this is an error response
         
     Returns:
-        dict: A standardized MCP response with isError and content array
+        dict: A standardized MCP response with isError and content array containing TextContent
     """
-    response = {
+    return {
         "isError": is_error,
-        "content": []
-    }
-
-    if isinstance(data, dict):
-        # For dictionaries, convert to JSON string
-        response["content"].append(TextContent(
-            type="text",
-            text=json.dumps(data)
-        ))
-    else:
-        # For everything else, convert to string
-        response["content"].append(TextContent(
+        "content": [TextContent(
             type="text",
             text=str(data)
-        ))
+        )]
+    }
 
-    return response
+
+def create_resource_response(data: dict, resource_type: str = "result", is_error: bool = False) -> dict:
+    """Create a standardized MCP response with an embedded resource.
+    
+    Args:
+        data: The structured data to embed as a resource
+        resource_type: The type of resource (e.g. "result", "navigation", "dom")
+        is_error: Whether this is an error response
+        
+    Returns:
+        dict: A standardized MCP response with isError and content array containing EmbeddedResource
+    """
+    return {
+        "isError": is_error,
+        "content": [EmbeddedResource(
+            type="resource",
+            resource=TextResourceContents(
+                uri=f"mcp://{resource_type}",
+                text=json.dumps(data)
+            )
+        )]
+    }

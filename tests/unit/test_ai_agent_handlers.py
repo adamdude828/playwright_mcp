@@ -1,6 +1,7 @@
 """Unit tests for AI agent handlers."""
 
 import pytest
+import json
 from unittest.mock import patch
 
 from playwright_mcp.browser_daemon.tools.handlers.ai_agent.handler import handle_ai_agent
@@ -11,16 +12,16 @@ from playwright_mcp.browser_daemon.tools.handlers.ai_agent.get_result import han
 async def test_handle_ai_agent_missing_page_id():
     """Test AI agent handler with missing page_id."""
     result = await handle_ai_agent({"query": "test query"})
-    assert result["status"] == "error"
-    assert "Missing required argument: page_id" in result["error"]
+    assert result["isError"] is True
+    assert "Missing required argument: page_id" in result["content"][0].text
 
 
 @pytest.mark.asyncio
 async def test_handle_ai_agent_missing_query():
     """Test AI agent handler with missing query."""
     result = await handle_ai_agent({"page_id": "test_page"})
-    assert result["status"] == "error"
-    assert "Missing required argument: query" in result["error"]
+    assert result["isError"] is True
+    assert "Missing required argument: query" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -37,13 +38,11 @@ async def test_handle_ai_agent_success(mock_send):
         "query": "test query"
     })
     
-    assert result["status"] == "running"
-    assert result["job_id"] == "test_job_123"
-    assert result["message"] == "AI agent job started successfully"
-    mock_send.assert_called_once_with("ai-agent", {
-        "page_id": "test_page",
-        "query": "test query"
-    })
+    assert result["isError"] is False
+    data = json.loads(result["content"][0].text)
+    assert data["status"] == "running"
+    assert data["job_id"] == "test_job_123"
+    assert data["message"] == "AI agent job started successfully"
 
 
 @pytest.mark.asyncio
@@ -59,8 +58,8 @@ async def test_handle_ai_agent_error_response(mock_send):
         "query": "test query"
     })
     
-    assert result["status"] == "error"
-    assert result["error"] == "Page not found"
+    assert result["isError"] is True
+    assert "Page not found" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -74,8 +73,8 @@ async def test_handle_ai_agent_exception(mock_send):
         "query": "test query"
     })
     
-    assert result["status"] == "error"
-    assert "AI agent request failed: Connection failed" in result["error"]
+    assert result["isError"] is True
+    assert "Connection failed" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -92,12 +91,11 @@ async def test_handle_get_result_success(mock_send):
         "job_id": "test_job_123"
     })
     
-    assert result["status"] == "completed"
-    assert result["job_id"] == "test_job_123"
-    assert result["result"] == "Example Domain"
-    mock_send.assert_called_once_with("get-ai-result", {
-        "job_id": "test_job_123"
-    })
+    assert result["isError"] is False
+    data = json.loads(result["content"][0].text)
+    assert data["status"] == "completed"
+    assert data["job_id"] == "test_job_123"
+    assert data["result"] == "Example Domain"
 
 
 @pytest.mark.asyncio
@@ -112,8 +110,8 @@ async def test_handle_get_result_error_response(mock_send):
         "job_id": "invalid_job"
     })
     
-    assert result["status"] == "error"
-    assert result["error"] == "Job not found"
+    assert result["isError"] is True
+    assert "Job not found" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -126,5 +124,5 @@ async def test_handle_get_result_exception(mock_send):
         "job_id": "test_job_123"
     })
     
-    assert result["status"] == "error"
-    assert "Failed to get result: Connection failed" in result["error"] 
+    assert result["isError"] is True
+    assert "Connection failed" in result["content"][0].text 

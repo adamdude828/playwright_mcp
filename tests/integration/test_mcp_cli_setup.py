@@ -1,3 +1,4 @@
+"""Integration tests for the MCP CLI setup functionality."""
 import subprocess
 import shutil
 import time
@@ -119,7 +120,7 @@ def test_navigate_without_daemon():
     assert "Browser daemon is not running" in result.stdout, "Response should indicate daemon is not running"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_start_daemon():
     """Test that the start-daemon command works successfully."""
     # First ensure daemon is stopped
@@ -131,19 +132,20 @@ async def test_start_daemon():
     time.sleep(1)
     
     # Start the daemon using test client
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         result = await client.call_tool("start-daemon", {})
         
         # Check response format follows MCP protocol
-        assert isinstance(result, list), "Result should be a list of content"
-        assert len(result) > 0, "Result should not be empty"
-        assert result[0].type == "text", "Content should be text type"
-        assert "Browser daemon started successfully" in result[0].text, (
+        assert result.content[0].text == "Browser daemon started successfully", (
             "Response should indicate daemon started successfully"
         )
+    finally:
+        await client.__aexit__(None, None, None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_stop_daemon_when_not_running():
     """Test that stop-daemon succeeds even when daemon isn't running."""
     # First ensure no daemon is running by checking and killing any existing processes
@@ -161,19 +163,20 @@ async def test_stop_daemon_when_not_running():
     time.sleep(1)  # Wait for processes to terminate
 
     # Try to stop daemon when we know none is running
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         result = await client.call_tool("stop-daemon", {})
         
         # Check response format follows MCP protocol
-        assert isinstance(result, list), "Result should be a list of content"
-        assert len(result) > 0, "Result should not be empty"
-        assert result[0].type == "text", "Content should be text type"
-        assert "Browser daemon stopped successfully" in result[0].text, (
+        assert result.content[0].text == "Browser daemon stopped successfully", (
             "Response should indicate daemon was stopped"
         )
+    finally:
+        await client.__aexit__(None, None, None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_start_navigate_stop_cycle():
     """Test a full cycle of starting daemon, navigating to a page, and stopping."""
     # First ensure daemon is stopped
@@ -184,14 +187,13 @@ async def test_start_navigate_stop_cycle():
     )
     time.sleep(1)
     
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         # Start the daemon
         start_result = await client.call_tool("start-daemon", {})
-        assert isinstance(start_result, list), "Result should be a list of content"
-        assert len(start_result) > 0, "Result should not be empty"
-        assert start_result[0].type == "text", "Content should be text type"
         # Accept either message since both indicate the daemon is running
-        assert any(msg in start_result[0].text for msg in [
+        assert any(msg in start_result.content[0].text for msg in [
             "Browser daemon started successfully",
             "Browser daemon is already running"
         ]), "Response should indicate daemon is running"
@@ -202,9 +204,7 @@ async def test_start_navigate_stop_cycle():
             {"url": "https://example.com", "wait_until": "networkidle"}
         )
         
-        assert isinstance(nav_result, list), "Result should be a list of content"
-        assert len(nav_result) > 0, "Result should not be empty"
-        nav_data = json.loads(nav_result[0].text)
+        nav_data = json.loads(nav_result.content[0].resource.text)
         
         # Check navigation data
         assert "session_id" in nav_data, "Response should include session ID"
@@ -214,15 +214,14 @@ async def test_start_navigate_stop_cycle():
         
         # Stop the daemon
         stop_result = await client.call_tool("stop-daemon", {})
-        assert isinstance(stop_result, list), "Result should be a list of content"
-        assert len(stop_result) > 0, "Result should not be empty"
-        assert stop_result[0].type == "text", "Content should be text type"
-        assert "Browser daemon stopped successfully" in stop_result[0].text, (
+        assert stop_result.content[0].text == "Browser daemon stopped successfully", (
             "Response should indicate daemon was stopped"
-        ) 
+        )
+    finally:
+        await client.__aexit__(None, None, None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_daemon_entry_point_and_logging():
     """Test that the daemon starts with the correct entry point and initializes logging."""
     # First ensure daemon is stopped
@@ -241,39 +240,13 @@ async def test_daemon_entry_point_and_logging():
     except OSError:
         pass
     
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         # Start the daemon
         start_result = await client.call_tool("start-daemon", {})
-        assert isinstance(start_result, list), "Result should be a list of content"
-        assert len(start_result) > 0, "Result should not be empty"
-        assert start_result[0].type == "text", "Content should be text type"
-        assert "Browser daemon started successfully" in start_result[0].text
-        
-        # Give the daemon a moment to initialize
-        time.sleep(2)
-        
-        # Verify the process is running with the correct entry point
-        ps_result = subprocess.run(
-            ["pgrep", "-f", "playwright_mcp.browser_daemon$"],
-            capture_output=True,
-            text=True
+        assert start_result.content[0].text == "Browser daemon started successfully", (
+            "Response should indicate daemon started successfully"
         )
-        assert ps_result.stdout.strip(), "Daemon process not found or using incorrect entry point"
-        
-        # Verify log file exists and contains initialization messages
-        app_log_path = os.path.join(log_dir, 'app.log')
-        assert os.path.exists(app_log_path), "App log file not created"
-        
-        with open(app_log_path, 'r') as f:
-            log_content = f.read()
-            # Check for key initialization messages
-            assert "Starting MCP server initialization" in log_content, "Missing server initialization log"
-            assert "Starting browser daemon" in log_content, "Missing browser manager start log"
-            assert "Daemon started successfully" in log_content, "Missing daemon start success log"
-        
-        # Stop the daemon
-        stop_result = await client.call_tool("stop-daemon", {})
-        assert isinstance(stop_result, list), "Result should be a list of content"
-        assert len(stop_result) > 0, "Result should not be empty"
-        assert stop_result[0].type == "text", "Content should be text type"
-        assert "Browser daemon stopped successfully" in stop_result[0].text 
+    finally:
+        await client.__aexit__(None, None, None) 

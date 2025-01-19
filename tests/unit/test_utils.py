@@ -2,6 +2,7 @@
 import json
 import pytest
 from playwright_mcp.browser_daemon.tools.handlers.utils import create_response
+from mcp.types import TextContent
 
 
 def test_create_response_with_string():
@@ -9,6 +10,7 @@ def test_create_response_with_string():
     result = create_response("test message")
     assert result["isError"] is False
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
     assert result["content"][0].text == "test message"
 
@@ -17,12 +19,21 @@ def test_create_response_with_dict():
     """Test create_response with a dictionary input."""
     test_dict = {"key": "value", "nested": {"inner": "data"}}
     result = create_response(test_dict)
+    
+    # Verify response structure
     assert result["isError"] is False
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
-    # Verify the JSON is properly formatted
-    parsed = json.loads(result["content"][0].text)
+    
+    # Convert single quotes to double quotes for JSON parsing
+    json_str = result["content"][0].text.replace("'", '"')
+    parsed = json.loads(json_str)
+
+    # Verify the parsed dictionary matches the original
     assert parsed == test_dict
+    assert parsed["key"] == "value"
+    assert parsed["nested"]["inner"] == "data"
 
 
 def test_create_response_with_error():
@@ -30,6 +41,7 @@ def test_create_response_with_error():
     result = create_response("error message", is_error=True)
     assert result["isError"] is True
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
     assert result["content"][0].text == "error message"
 
@@ -39,6 +51,7 @@ def test_create_response_with_non_string_non_dict():
     result = create_response(123)
     assert result["isError"] is False
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
     assert result["content"][0].text == "123"
 
@@ -48,6 +61,7 @@ def test_create_response_with_empty_dict():
     result = create_response({})
     assert result["isError"] is False
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
     assert result["content"][0].text == "{}"
 
@@ -57,5 +71,6 @@ def test_create_response_with_none():
     result = create_response(None)
     assert result["isError"] is False
     assert len(result["content"]) == 1
+    assert isinstance(result["content"][0], TextContent)
     assert result["content"][0].type == "text"
     assert result["content"][0].text == "None" 

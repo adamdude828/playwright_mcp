@@ -11,7 +11,6 @@ from mcp.client.stdio import get_default_environment
 from contextlib import AsyncExitStack
 import os
 import signal
-import json
 import logging
 import anyio
 import sys
@@ -155,8 +154,5 @@ class MCPTestClient:
         
         # Convert result to list of TextContent if needed
         if isinstance(result, list):
-            return [
-                TextContent(text=json.loads(item.text) if isinstance(item.text, str) else item.text)
-                for item in result
-            ]
-        return [TextContent(text=json.loads(str(result)) if isinstance(result, str) else result)] 
+            return result  # Already TextContent objects from server
+        return [TextContent(text=result)]  # Wrap single result in TextContent 

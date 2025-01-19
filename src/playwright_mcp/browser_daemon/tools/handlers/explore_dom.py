@@ -1,9 +1,8 @@
-from typing import Dict, List
-from mcp.types import TextContent
-from .utils import send_to_manager
+from typing import Dict
+from .utils import send_to_manager, create_response
 
 
-async def handle_explore_dom(arguments: Dict) -> List[TextContent]:
+async def handle_explore_dom(arguments: Dict) -> Dict:
     """Handle explore-dom command by exploring immediate children of a DOM element."""
     try:
         # Get page_id and selector from arguments
@@ -11,7 +10,7 @@ async def handle_explore_dom(arguments: Dict) -> List[TextContent]:
         selector = arguments.get("selector", "body")  # Default to body if no selector provided
         
         if not page_id:
-            return [TextContent(type="text", text="No page_id provided")]
+            return create_response("No page_id provided", is_error=True)
             
         response = await send_to_manager("explore-dom", {
             "page_id": page_id,
@@ -19,12 +18,12 @@ async def handle_explore_dom(arguments: Dict) -> List[TextContent]:
         })
         
         if "error" in response:
-            return [TextContent(type="text", text=f"Error: {response['error']}")]
+            return create_response(f"Error: {response['error']}", is_error=True)
             
         # Format the children info into a tree-like text structure
         children = response.get("children", [])
         if not children:
-            return [TextContent(type="text", text=f"No children found for selector: {selector}")]
+            return create_response(f"No children found for selector: {selector}")
             
         # Build output text
         lines = [f"Element: {selector}"]
@@ -42,7 +41,7 @@ async def handle_explore_dom(arguments: Dict) -> List[TextContent]:
                 child_info += f" ({child_count} children)"
             lines.append(f"{prefix}{child_info}{text_preview}")
             
-        return [TextContent(type="text", text="\n".join(lines))]
+        return create_response("\n".join(lines))
         
     except Exception as e:
-        return [TextContent(type="text", text=f"Error exploring DOM: {str(e)}")] 
+        return create_response(f"Error exploring DOM: {str(e)}", is_error=True) 
