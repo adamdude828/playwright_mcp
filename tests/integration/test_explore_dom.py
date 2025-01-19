@@ -19,29 +19,50 @@ def extract_page_id(response):
     return data["page_id"]
 
 
-async def test_explore_simple_page(client):
+@pytest.mark.anyio
+async def test_explore_simple_page():
     """Test exploring a simple page with known structure."""
-    # First navigate to a simple page
-    nav_response = await client.call_tool(
-        "navigate",
-        {
-            "url": "https://example.com",
-            "wait_until": "networkidle"
+    client = TestClient()
+    await client.__aenter__()
+    try:
+        # Start the daemon
+        await client.call_tool("start-daemon", {})
+        
+        # Navigate to create a session and page
+        result = await client.call_tool("navigate", {"url": "https://example.com"})
+        print("\nRaw navigate result:", result.content[0].resource.text)
+        
+        # Parse the response data
+        response_data = json.loads(result.content[0].resource.text)
+        browser_page = {
+            "session_id": response_data['session_id'],
+            "page_id": response_data['page_id']
         }
-    )
-    page_id = extract_page_id(nav_response)
-    
-    # Then explore its DOM
-    explore_response = await client.call_tool(
-        "explore-dom",
-        {
-            "page_id": page_id,
-            "selector": "body"  # Start from body
-        }
-    )
-    
-    # Verify response format and content
-    text = explore_response[0].text
-    assert text.startswith("Element: body"), "Response should start with body element"
-    assert "div" in text, "Response should contain div elements"
-    assert "children)" in text, "Response should indicate child counts" 
+        
+        print("\nBrowser page:", browser_page)
+        
+        # Then explore its DOM
+        explore_response = await client.call_tool(
+            "explore-dom",
+            {
+                "page_id": browser_page["page_id"],
+                "selector": "body"  # Start from body
+            }
+        )
+        
+        # Verify response format and content
+        assert not explore_response.isError, "Expected successful response"
+        assert len(explore_response.content) == 1, "Expected single TextContent result"
+        text = explore_response.content[0].text
+        print("\nExplore DOM response:", text)
+        assert "Element: body" in text, "Response should contain body element"
+        assert "div" in text, "Response should contain div elements"
+        assert "children)" in text, "Response should indicate child counts"
+        
+        # Clean up browser
+        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        
+        # Stop daemon before client exits
+        await client.call_tool("stop-daemon", {})
+    finally:
+        await client.__aexit__(None, None, None) 

@@ -1,40 +1,46 @@
 """Handler for navigation requests."""
 
-from .utils import send_to_manager
+from mcp.types import TextContent, EmbeddedResource, TextResourceContents
+from .utils import logger, send_to_manager
+import json
 
 
-async def handle_navigate(args: dict, daemon=None) -> dict:
-    """Handle navigate request."""
-    # Check required arguments
-    if "url" not in args:
-        return {
-            "status": "error",
-            "isError": True,
-            "error": "Missing required argument: url"
-        }
-
+async def handle_navigate(arguments: dict) -> list[TextContent | EmbeddedResource]:
+    """Handle navigation requests."""
+    logger.debug(f"Handling navigation request with arguments: {arguments}")
+    
+    if "url" not in arguments:
+        logger.error("Missing required 'url' argument")
+        return [EmbeddedResource(
+            type="resource",
+            resource=TextResourceContents(
+                uri="mcp://navigation",
+                text='{"error": "Missing required \'url\' argument"}'
+            )
+        )]
+        
     try:
-        result = await send_to_manager("navigate", args)
+        response = await send_to_manager("navigate", arguments)
         
-        if "error" in result:
-            return {
-                "status": "error",
-                "isError": True,
-                "error": result["error"]
-            }
-            
-        return {
-            "session_id": result["session_id"],
-            "page_id": result["page_id"],
-            "created_session": result.get("created_session", True),
-            "created_page": result.get("created_page", True),
-            "isError": False
-        }
-        
+        # Return the navigation data as an embedded resource
+        return [EmbeddedResource(
+            type="resource",
+            resource=TextResourceContents(
+                uri="mcp://navigation",
+                text=json.dumps({
+                    "session_id": response["session_id"],
+                    "page_id": response["page_id"],
+                    "created_session": response["created_session"],
+                    "created_page": response["created_page"]
+                })
+            )
+        )]
     except Exception as e:
-        error_msg = str(e)
-        return {
-            "status": "error",
-            "isError": True,
-            "error": error_msg
-        } 
+        logger.error(f"Navigation failed: {e}")
+        return [EmbeddedResource(
+            type="resource",
+            resource=TextResourceContents(
+                uri="mcp://navigation",
+                text=json.dumps({"error": str(e)})
+            )
+        )] 

@@ -18,10 +18,12 @@ def clean_output(output: str) -> str:
     return output
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_navigate_returns_session_and_page_ids():
     """Test that navigate command returns both session and page IDs."""
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         # First ensure daemon is started
         await client.call_tool("start-daemon", {})
         
@@ -32,26 +34,29 @@ async def test_navigate_returns_session_and_page_ids():
         )
         
         # Check response format
-        assert isinstance(result, list), "Result should be a list of content"
-        assert len(result) > 0, "Result should not be empty"
-        assert result[0].type == "text", "Content should be text type"
+        assert result.isError is False, "Result should not be an error"
+        assert len(result.content) > 0, "Result should not be empty"
+        assert result.content[0].type == "resource", "Content should be resource type"
         
         # Parse the response data
-        data = json.loads(result[0].text)
+        data = json.loads(result.content[0].resource.text)
         
         # Verify response contains session and page IDs
         assert 'session_id' in data, "Response should include session ID"
         assert 'page_id' in data, "Response should include page ID"
         assert 'chromium_' in data['session_id'], "Session ID should be for chromium browser"
-        
+    finally:
         # Clean up
         await client.call_tool("stop-daemon", {})
+        await client.__aexit__(None, None, None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_navigate_reuses_session():
     """Test that navigate command reuses an existing session."""
-    async with TestClient() as client:
+    client = TestClient()
+    await client.__aenter__()
+    try:
         # Start daemon
         await client.call_tool("start-daemon", {})
         
@@ -62,12 +67,12 @@ async def test_navigate_reuses_session():
         )
         
         # Check response format
-        assert isinstance(result, list), "Result should be a list of content"
-        assert len(result) > 0, "Result should not be empty"
-        assert result[0].type == "text", "Content should be text type"
+        assert result.isError is False, "Result should not be an error"
+        assert len(result.content) > 0, "Result should not be empty"
+        assert result.content[0].type == "resource", "Content should be resource type"
         
         # Parse the response data
-        data = json.loads(result[0].text)
+        data = json.loads(result.content[0].resource.text)
         
         # Get session ID from first navigation
         assert 'session_id' in data, "Response should include session ID"
@@ -84,17 +89,18 @@ async def test_navigate_reuses_session():
         )
         
         # Check response format
-        assert isinstance(result, list), "Result should be a list of content"
-        assert len(result) > 0, "Result should not be empty"
-        assert result[0].type == "text", "Content should be text type"
+        assert result.isError is False, "Result should not be an error"
+        assert len(result.content) > 0, "Result should not be empty"
+        assert result.content[0].type == "resource", "Content should be resource type"
         
         # Parse the response data
-        data = json.loads(result[0].text)
+        data = json.loads(result.content[0].resource.text)
         
         # Verify session was reused
         assert data['session_id'] == session_id, "Should reuse the same session ID"
         assert data['created_session'] is False, "Should not create new session"
         assert data['created_page'] is True, "Should create new page"
-        
+    finally:
         # Clean up
-        await client.call_tool("stop-daemon", {}) 
+        await client.call_tool("stop-daemon", {})
+        await client.__aexit__(None, None, None) 

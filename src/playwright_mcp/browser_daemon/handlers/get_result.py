@@ -35,6 +35,8 @@ class GetResultHandler(BaseHandler):
             status = await daemon.job_store.get_job_status(job_id)
             result = await daemon.job_store.get_job_result(job_id)
 
+            logger.info(f"Got result for job {job_id}: {result}")
+
             return {
                 "job_id": job_id,
                 "status": status,

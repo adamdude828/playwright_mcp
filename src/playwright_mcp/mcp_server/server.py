@@ -231,7 +231,7 @@ async def handle_call_tool(
 
 async def start_server():
     """Start the server with stdio transport."""
-    logger.info("Starting server initialization...")  # Early logging
+    logger.info("Starting MCP server initialization...")  # More explicit about MCP server
     try:
         # Run the server using stdin/stdout streams
         async with stdio_server() as (read_stream, write_stream):

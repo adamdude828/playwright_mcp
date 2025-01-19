@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from datetime import datetime
 import asyncio
 from unittest.mock import patch
+import json
 
 from playwright_mcp.browser_daemon.tools.handlers.ai_agent.job_store import JobStore, job_store, JobStatus
 from playwright_mcp.browser_daemon.tools.handlers.ai_agent.handler import handle_ai_agent
@@ -207,7 +208,7 @@ async def test_handle_ai_agent_missing_page_id():
         "query": "test query"
     })
     assert result["isError"] is True
-    assert "page_id" in result["error"]
+    assert "page_id" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -217,7 +218,7 @@ async def test_handle_ai_agent_missing_query():
         "page_id": "test_page"
     })
     assert result["isError"] is True
-    assert "query" in result["error"]
+    assert "query" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -235,7 +236,9 @@ async def test_handle_ai_agent_success(mock_send):
         "query": "test query"
     })
     assert result["isError"] is False
-    assert "job_id" in result
+    response_data = json.loads(result["content"][0].text)
+    assert "job_id" in response_data
+    assert response_data["job_id"] == "test_job_123"
 
 
 @pytest.mark.asyncio
@@ -253,7 +256,9 @@ async def test_handle_ai_agent_with_daemon(mock_send):
         "query": "test query"
     }, daemon=mock_daemon)
     assert result["isError"] is False
-    assert "job_id" in result
+    response_data = json.loads(result["content"][0].text)
+    assert "job_id" in response_data
+    assert response_data["job_id"] == "test_job_123"
 
 
 @pytest.mark.asyncio
@@ -261,7 +266,7 @@ async def test_handle_get_ai_result_missing_job_id():
     """Test get-ai-result handler with missing job_id."""
     result = await handle_get_ai_result({})
     assert result["isError"] is True
-    assert "job_id" in result["error"]
+    assert "job_id" in result["content"][0].text
 
 
 @pytest.mark.asyncio
@@ -277,7 +282,7 @@ async def test_handle_get_ai_result_not_found(mock_send):
         "job_id": "non_existent"
     }, daemon=mock_daemon)
     assert result["isError"] is True
-    assert "not found" in result["error"].lower()
+    assert "not found" in result["content"][0].text.lower()
 
 
 @pytest.mark.asyncio
@@ -296,8 +301,10 @@ async def test_handle_get_ai_result_success(mock_send):
     }, daemon=mock_daemon)
     
     assert result["isError"] is False
-    assert result["status"] == "completed"
-    assert result["result"] == {"test": "result"}
+    response_data = json.loads(result["content"][0].text)
+    assert response_data["status"] == "completed"
+    assert response_data["job_id"] == "test_job_123"
+    assert response_data["result"] == {"test": "result"}
 
 
 @pytest.mark.asyncio
@@ -307,4 +314,4 @@ async def test_handle_get_ai_result_without_daemon():
         "job_id": "test_job"
     })
     assert result["isError"] is True
-    assert "browser daemon is not running" in result["error"].lower() 
+    assert "browser daemon is not running" in result["content"][0].text.lower() 

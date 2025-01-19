@@ -10,11 +10,16 @@ logger = setup_logging("browser_daemon")
 
 async def main():
     """Start and run the browser manager."""
-    logger.info("Starting browser manager")
-    manager = BrowserManager()
-    await manager.start()
-    await asyncio.Event().wait()  # Keep the daemon running
-    logger.info("Browser manager started")
+    logger.info("Starting server initialization")
+    try:
+        manager = BrowserManager()
+        logger.info("Starting browser manager service")
+        await manager.start()
+        logger.info("Browser manager started successfully")
+        await asyncio.Event().wait()  # Keep the daemon running
+    except Exception as e:
+        logger.error(f"Failed to start browser manager: {e}", exc_info=True)
+        raise
 
 
 def run():
@@ -22,7 +27,10 @@ def run():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nShutting down browser manager...")
+        logger.info("Shutting down browser manager...")
+    except Exception as e:
+        logger.error(f"Unhandled exception in browser manager: {e}", exc_info=True)
+        raise
 
 
 if __name__ == "__main__":
