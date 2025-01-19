@@ -28,6 +28,8 @@ class TestClient:
         self.env = os.environ.copy()
         self.env['LOG_LEVEL'] = 'DEBUG'  # Ensure debug logging is enabled
         self.cwd = os.getcwd()  # Store working directory
+        self.current_session_id = None
+        self.current_page_id = None
     
     async def __aenter__(self):
         return self
@@ -78,118 +80,48 @@ class TestClient:
                 # Parse the response from mcp-cli which wraps it in TextContent
                 response = {"status": "error", "isError": True, "error": "Browser daemon is not running"}
             else:
-                session_id = tool_args.get("session_id", "")
-                page_id = tool_args.get("page_id", "")
-                url = tool_args.get("url", "")
-                
-                if "thisisnotarealwebsite.com" in url:
-                    response = "net::ERR_NAME_NOT_RESOLVED"
-                else:
-                    response = {
-                        "session_id": session_id if session_id else "chromium_test_session_1",
-                        "page_id": page_id if page_id else "test_page_1",
-                        "message": "Navigated successfully",
-                        "created_session": not bool(session_id),
-                        "created_page": not bool(page_id)
-                    }
-        elif tool_name == "execute-js":
-            session_id = tool_args.get("session_id", "")
-            page_id = tool_args.get("page_id", "")
-            script = tool_args.get("script", "")
-
-            if session_id != "chromium_test_session_1":
-                response = f"No browser session found for ID: {session_id}"
-            elif page_id != "test_page_1":
-                response = f"No page found with ID: {page_id}"
-            elif script == "2 + 2":
-                response = "4"
-            elif script == "invalid javascript":
-                response = "SyntaxError: Unexpected identifier 'javascript'"
-            elif "obj.nested.array[1]" in script:
-                response = "2"
-            else:
-                response = {"message": "Tool executed successfully"}
-        elif tool_name == "explore-dom":
-            page_id = tool_args.get("page_id", "")
-            selector = tool_args.get("selector", "")
-            
-            if page_id != "test_page_1":
-                response = f"No page found with ID: {page_id}"
-            elif selector == "body":
-                response = (
-                    "Element: body (3 children)\n"
-                    "  - div.main (2 children)\n"
-                    "    - h1: Example Domain\n"
-                    "    - p: This domain is for use in illustrative examples in documents.\n"
-                    "  - div.footer (1 child)\n"
-                    "    - p: More information..."
+                # Call the real daemon to navigate
+                result = subprocess.run(
+                    ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'navigate',
+                     '--tool-args', json.dumps(tool_args)],
+                    capture_output=True,
+                    text=True,
+                    env=self.env,
+                    cwd=self.cwd
                 )
-            else:
-                response = f"Element: {selector}\n  No children found"
-        elif tool_name == "highlight-element":
-            page_id = tool_args.get("page_id", "")
-            selector = tool_args.get("selector", "")
-            save_path = tool_args.get("save_path", "")
+                try:
+                    response_data = json.loads(result.stdout)
+                    # Store the real session and page IDs for future use
+                    if "session_id" in response_data:
+                        self.current_session_id = response_data["session_id"]
+                    if "page_id" in response_data:
+                        self.current_page_id = response_data["page_id"]
+                    response = response_data
+                except json.JSONDecodeError:
+                    response = {"error": "Failed to parse daemon response", "raw_output": result.stdout}
+        elif tool_name == "execute-js":
+            # Use the stored session and page IDs from navigation
+            session_id = tool_args.get("session_id", self.current_session_id)
+            page_id = tool_args.get("page_id", self.current_page_id)
             
-            if page_id != "test_page_1":
-                response = f"No page found with ID: {page_id}"
-            elif not selector:
-                response = "No selector provided"
-            elif not save_path:
-                response = "No save path provided"
+            if not session_id or not page_id:
+                response = "No active browser session or page. Please navigate to a page first."
             else:
-                # Create a dummy PNG file
-                import os
-                os.makedirs(os.path.dirname(save_path), exist_ok=True)
-                with open(save_path, "wb") as f:
-                    # Write a minimal valid PNG file
-                    png_data = (
-                        "89504e470d0a1a0a"    # PNG signature
-                        "0000000d49484452"     # IHDR chunk header
-                        "0000000100000001"     # Width=1, Height=1
-                        "08060000001f15c489"   # Bit depth etc
-                        "0000000d49444154"     # IDAT chunk header
-                        "78da636400000000"     # Compressed pixel data
-                        "06000557bfabc3"       # IDAT chunk trailer
-                        "0000000049454e44"     # IEND chunk header
-                        "ae426082"             # IEND chunk trailer
-                    )
-                    f.write(bytes.fromhex(png_data))
-                response = {"message": "Element highlighted and screenshot saved"}
-        elif tool_name == "ai-agent":
-            page_id = tool_args.get("page_id", "")
-            query = tool_args.get("query", "")
-            
-            if not query:
-                response = {"error": "Missing required argument: query"}
-            elif page_id != "test_page_1":
-                # Store the invalid page ID for later
-                response = {
-                    "job_id": "test_job_invalid_page",
-                    "page_id": page_id  # Store this for later
-                }
-            else:
-                response = {"job_id": "test_job_1"}
-        elif tool_name == "get-ai-result":
-            job_id = tool_args.get("job_id", "")
-            
-            if job_id == "test_job_1":
-                response = {
-                    "status": "completed",
-                    "result": "The main heading is 'Example Domain'"
-                }
-            elif job_id == "test_job_invalid_page":
-                response = {
-                    "status": "error",
-                    "result": None,
-                    "error": "Invalid page ID"
-                }
-            else:
-                response = {
-                    "status": "error",
-                    "result": None,
-                    "error": "Job not found"
-                }
+                # Call the real daemon to execute JavaScript
+                tool_args["session_id"] = session_id
+                tool_args["page_id"] = page_id
+                result = subprocess.run(
+                    ['mcp-cli', '--server', 'playwright', 'call-tool', '--tool', 'execute-js',
+                     '--tool-args', json.dumps(tool_args)],
+                    capture_output=True,
+                    text=True,
+                    env=self.env,
+                    cwd=self.cwd
+                )
+                try:
+                    response = json.loads(result.stdout)
+                except json.JSONDecodeError:
+                    response = result.stdout.strip()
         else:
             response = {"message": "Tool executed successfully"}
 
