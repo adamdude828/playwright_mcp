@@ -5,7 +5,7 @@ from typing import Dict, Optional, Any
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from ....core.logging import setup_logging
+from ....utils.logging import setup_logging
 
 # Configure logging
 logger = setup_logging("job_store")

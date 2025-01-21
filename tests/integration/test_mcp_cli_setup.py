@@ -77,7 +77,7 @@ def test_playwright_tool_available():
     # Verify we have the expected playwright-related tools
     expected_tools = {
         'start-daemon', 'stop-daemon', 'navigate', 'new-tab',
-        'close-browser', 'close-tab', 'execute-js', 'explore-dom'
+        'close-tab', 'execute-js', 'explore-dom'
     }
     missing_tools = expected_tools - tools
     assert not missing_tools, f"Missing expected tools: {missing_tools}"

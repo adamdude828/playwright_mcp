@@ -22,5 +22,6 @@ async def test_navigate_to_invalid_url(client):
     # Try to navigate to invalid URL
     result = await client.call_tool("navigate", {"url": invalid_url})
     
-    # For navigation errors, the handler returns the error message directly
-    assert "net::" in result[0].text, "Response should include network error" 
+    # For navigation errors, check both isError and error message
+    assert result.isError, "Response should indicate an error"
+    assert "net::" in result.content[0].text, "Response should include network error"

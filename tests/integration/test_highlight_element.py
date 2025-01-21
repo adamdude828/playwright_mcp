@@ -57,7 +57,10 @@ async def test_highlight_element_generates_screenshot(tmp_path):
         os.unlink(screenshot_path)
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})

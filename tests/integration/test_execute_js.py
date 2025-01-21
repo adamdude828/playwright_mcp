@@ -33,7 +33,10 @@ async def browser_page(client):
     }
     
     # Cleanup
-    await client.call_tool("close-browser", {"session_id": response_data['session_id']})
+    await client.call_tool("close-tab", {
+        "session_id": response_data['session_id'],
+        "page_id": response_data['page_id']
+    })
 
 
 @pytest.mark.anyio
@@ -69,7 +72,10 @@ async def test_execute_simple_js():
         assert content == "42", "Expected result to be 42"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})
@@ -122,7 +128,10 @@ async def test_execute_complex_js():
         assert content == "2", "Expected result to be 2"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})
@@ -166,7 +175,10 @@ async def test_execute_js_with_invalid_session():
             f"Expected 'No browser session found' in response, got: {content}"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})
@@ -210,7 +222,10 @@ async def test_execute_js_with_invalid_page():
             f"Expected 'No page found' in response, got: {content}"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})
@@ -254,7 +269,10 @@ async def test_execute_invalid_js():
             f"Expected SyntaxError in response, got: {content}"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})

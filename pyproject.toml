@@ -5,8 +5,12 @@ description = "Playwright MCP Server"
 authors = ["Adam Holsinger"]
 readme = "README.md"
 packages = [
-    { include = "playwright_mcp", from = "src" }
+    { include = "playwright_mcp", from = "src" },
+    { include = "functional_tests" }
 ]
+
+[tool.poetry.scripts]
+functional-tests = "functional_tests.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -19,6 +23,7 @@ beautifulsoup4 = "^4.12.3"
 lxml = "^5.3.0"
 pydantic-ai = "^0.0.19"
 anthropic = "^0.43.0"
+click = "^8.1.8"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"

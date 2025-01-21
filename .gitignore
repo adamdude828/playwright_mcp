@@ -43,3 +43,6 @@ logs/
 *.db
 *.sqlite3 
 server_config.json
+
+# Functional test screenshots
+functional_tests/screen_shots/

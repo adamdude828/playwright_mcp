@@ -1,6 +1,5 @@
 import asyncio
 
-from .core.logging import setup_logging
 from .core.server import UnixSocketServer
 from .core.session import session_manager
 from .handlers.navigation import NavigationHandler
@@ -10,9 +9,10 @@ from .handlers.session import SessionHandler
 from .handlers.interaction import InteractionHandler
 from .handlers.ai_agent import AIAgentHandler
 from .handlers.get_result import GetResultHandler
-from .tools.handlers.ai_agent.job_store import job_store
+from ..utils.logging import setup_logging
+from .handlers.ai_agent.job_store import job_store
 
-logger = setup_logging("browser_manager")
+logger = setup_logging("browser_manager", "browser_manager.log")
 
 
 class BrowserManager:
@@ -35,31 +35,32 @@ class BrowserManager:
         ai_agent_handler = AIAgentHandler(self.session_manager)
         get_result_handler = GetResultHandler(self.session_manager)
 
-        # Map commands to handlers and whether they need daemon access
+        # Map commands to handlers
         self.handlers = {
             # Navigation commands
-            "navigate": {"handler": nav_handler, "needs_daemon": False},
-            "new-tab": {"handler": nav_handler, "needs_daemon": False},
+            "navigate": nav_handler,
+            "new-tab": nav_handler,
             
             # DOM commands
-            "execute-js": {"handler": dom_handler, "needs_daemon": False},
-            "explore-dom": {"handler": dom_handler, "needs_daemon": False},
-            "search-dom": {"handler": dom_handler, "needs_daemon": False},
+            "execute-js": dom_handler,
+            "explore-dom": dom_handler,
+            "search-dom": dom_handler,
             
             # Screenshot commands
-            "screenshot": {"handler": screenshot_handler, "needs_daemon": False},
-            "highlight-element": {"handler": screenshot_handler, "needs_daemon": False},
+            "screenshot": screenshot_handler,
+            "highlight-element": screenshot_handler,
             
             # Session commands
-            "new-session": {"handler": session_handler, "needs_daemon": False},
-            "close-session": {"handler": session_handler, "needs_daemon": False},
+            "new-session": session_handler,
+            "close-session": session_handler,
+            "close-tab": session_handler,
             
             # Interaction commands
-            "interact-dom": {"handler": interaction_handler, "needs_daemon": False},
+            "interact-dom": interaction_handler,
             
             # AI agent commands
-            "ai-agent": {"handler": ai_agent_handler, "needs_daemon": False},
-            "get-result": {"handler": get_result_handler, "needs_daemon": False},
+            "ai-agent": ai_agent_handler,
+            "get-ai-result": get_result_handler,
         }
         logger.info("MCP server initialized")
 
@@ -76,18 +77,15 @@ class BrowserManager:
             elif command == "ping":
                 response = {"result": "pong"}
             else:
-                handler_info = self.handlers.get(command)
-                if not handler_info:
+                handler = self.handlers.get(command)
+                if not handler:
                     response = {"error": f"Unknown command: {command}"}
                 else:
                     # Add command to args so handler knows what to do
                     args["command"] = command
-                    # Only pass daemon to handlers that need it
-                    if handler_info["needs_daemon"]:
-                        response = await handler_info["handler"].handle(args, daemon=self)
-                    else:
-                        response = await handler_info["handler"].handle(args)
-            
+                    response = await handler.handle(args)
+
+            logger.info(f"Sending response: {response}")
             await self.server.send_response(writer, response)
 
         except Exception as e:

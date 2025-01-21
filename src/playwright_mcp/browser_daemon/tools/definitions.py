@@ -23,6 +23,20 @@ def get_tool_definitions() -> list[Tool]:
             }
         ),
         Tool(
+            name="get-ai-result",
+            description="Get the result of an AI agent job",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "job_id": {
+                        "type": "string",
+                        "description": "ID of the AI agent job to get results for"
+                    }
+                },
+                "required": ["job_id"]
+            }
+        ),
+        Tool(
             name="navigate",
             description=(
                 "Navigate to a URL, optionally reusing an existing browser session "
@@ -106,20 +120,6 @@ def get_tool_definitions() -> list[Tool]:
                     "session_id": {
                         "type": "string",
                         "description": "Browser session ID to open the tab in"
-                    }
-                },
-                "required": ["session_id"]
-            }
-        ),
-        Tool(
-            name="close-browser",
-            description="Close a browser session and clean up resources",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "description": "Browser session ID to close"
                     }
                 },
                 "required": ["session_id"]
@@ -337,32 +337,6 @@ def get_tool_definitions() -> list[Tool]:
             }
         ),
         Tool(
-            name="find-similar-selectors",
-            description=(
-                "Find alternative CSS selectors for a given element that are more robust "
-                "against page changes. Returns multiple selector options ranked by reliability."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "page_id": {
-                        "type": "string",
-                        "description": "Page ID containing the element"
-                    },
-                    "selector": {
-                        "type": "string",
-                        "description": "Current CSS selector for the element"
-                    },
-                    "max_results": {
-                        "type": "number",
-                        "description": "Maximum number of alternative selectors to return",
-                        "default": 5
-                    }
-                },
-                "required": ["page_id", "selector"]
-            }
-        ),
-        Tool(
             name="ai-agent",
             description=(
                 "Start an AI agent job to analyze and interact with a web page using natural language. "
@@ -383,26 +357,14 @@ def get_tool_definitions() -> list[Tool]:
                         "type": "integer",
                         "description": "Maximum number of actions the agent can take",
                         "default": 5
+                    },
+                    "async": {
+                        "type": "boolean",
+                        "description": "Whether to run asynchronously (true) or wait for completion (false)",
+                        "default": True
                     }
                 },
                 "required": ["page_id", "query"]
-            }
-        ),
-        Tool(
-            name="get-ai-result",
-            description=(
-                "Get the result of a previously started AI agent job. "
-                "Returns the job status and result if completed."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "job_id": {
-                        "type": "string",
-                        "description": "ID of the job to check"
-                    }
-                },
-                "required": ["job_id"]
             }
         )
     ]

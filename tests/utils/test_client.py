@@ -5,6 +5,7 @@ It directly executes tool calls for testing, bypassing the LLM interaction.
 """
 import os
 import logging
+import json
 from typing import Any, Dict, List, Optional
 from mcp.types import TextContent, EmbeddedResource
 from mcp.client.session import ClientSession
@@ -12,9 +13,25 @@ from mcp.client.stdio import stdio_client, get_default_environment, StdioServerP
 from contextlib import AsyncExitStack
 
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# Set up logging with file handler
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Create logs directory if it doesn't exist
+os.makedirs('logs', exist_ok=True)
+
+# Add file handler
+fh = logging.FileHandler('logs/test_client.log')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+# Add console handler
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 def is_mcp_content(item) -> bool:
@@ -45,12 +62,12 @@ class TestClient:
         
         # Connect to server using stdio transport
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
-        read_stream, write_stream = stdio_transport
+        self.read_stream, self.write_stream = stdio_transport
         
         # Create and initialize client session
         logger.debug("Creating client session...")
         self.session = await self.exit_stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(self.read_stream, self.write_stream)
         )
         logger.debug("Initializing client session...")
         await self.session.initialize()
@@ -77,8 +94,28 @@ class TestClient:
             raise RuntimeError("Session not initialized - use async with")
             
         logger.debug(f"Calling tool {tool_name} with args {tool_args}")
-        # Make the tool call through the session
-        result = await self.session.call_tool(tool_name, tool_args)
-        logger.debug(f"Raw result: {result}")
         
-        return result 
+        try:
+            # Make the tool call through the session
+            result = await self.session.call_tool(tool_name, tool_args)
+            logger.debug(f"Raw result type: {type(result)}")
+            logger.debug(f"Raw result content: {result}")
+            
+            # Log detailed content of each response item
+            for item in result:
+                if isinstance(item, TextContent):
+                    logger.debug(f"Text content: {item.text}")
+                elif isinstance(item, EmbeddedResource):
+                    logger.debug(f"Resource URI: {item.resource.uri}")
+                    logger.debug(f"Resource text: {item.resource.text}")
+                    try:
+                        parsed = json.loads(item.resource.text)
+                        logger.debug(f"Parsed JSON: {json.dumps(parsed, indent=2)}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse JSON: {e}")
+                        logger.debug(f"Raw text causing error: {item.resource.text!r}")
+            
+            return result
+        except Exception as e:
+            logger.exception(f"Error in call_tool: {e}")
+            raise 

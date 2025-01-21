@@ -60,7 +60,10 @@ async def test_explore_simple_page():
         assert "children)" in text, "Response should indicate child counts"
         
         # Clean up browser
-        await client.call_tool("close-browser", {"session_id": browser_page["session_id"]})
+        await client.call_tool("close-tab", {
+            "session_id": browser_page["session_id"],
+            "page_id": browser_page["page_id"]
+        })
         
         # Stop daemon before client exits
         await client.call_tool("stop-daemon", {})

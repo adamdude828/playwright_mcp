@@ -314,4 +314,4 @@ async def test_handle_get_ai_result_without_daemon():
         "job_id": "test_job"
     })
     assert result["isError"] is True
-    assert "browser daemon is not running" in result["content"][0].text.lower() 
+    assert "job not found" in result["content"][0].text.lower() 

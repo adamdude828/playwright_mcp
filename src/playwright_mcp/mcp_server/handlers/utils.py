@@ -30,7 +30,7 @@ import sys
 from typing import Dict, Any
 from playwright.async_api import Page
 from mcp.types import TextContent, EmbeddedResource, TextResourceContents
-from ....utils.logging import setup_logging
+from ...utils.logging import setup_logging
 
 
 # Configure logging
@@ -252,6 +252,7 @@ async def send_to_manager(command: str, args: dict) -> dict:
 
         # Parse response
         try:
+            logger.debug(f"Received raw response: {response}")
             response_text = response.decode()
             logger.debug(f"Received response: {response_text}")
             return json.loads(response_text)
@@ -265,43 +266,41 @@ async def send_to_manager(command: str, args: dict) -> dict:
         raise
 
 
-def create_response(data: Any, is_error: bool = False) -> dict:
-    """Create a standardized MCP text response dictionary.
+def create_response(data: Any) -> list:
+    """Create a standardized MCP text response.
     
     Args:
-        data: The response data or error message (will be converted to string)
-        is_error: Whether this is an error response
+        data: The response data (will be converted to string)
         
     Returns:
-        dict: A standardized MCP response with isError and content array containing TextContent
+        list: A list containing TextContent objects
+        
+    Raises:
+        Exception: If there is an error that should be handled by MCP server
     """
-    return {
-        "isError": is_error,
-        "content": [TextContent(
-            type="text",
-            text=str(data)
-        )]
-    }
+    return [TextContent(
+        type="text",
+        text=str(data)
+    )]
 
 
-def create_resource_response(data: dict, resource_type: str = "result", is_error: bool = False) -> dict:
+def create_resource_response(data: dict, resource_type: str = "result") -> list:
     """Create a standardized MCP response with an embedded resource.
     
     Args:
         data: The structured data to embed as a resource
         resource_type: The type of resource (e.g. "result", "navigation", "dom")
-        is_error: Whether this is an error response
         
     Returns:
-        dict: A standardized MCP response with isError and content array containing EmbeddedResource
+        list: A list containing EmbeddedResource objects
+        
+    Raises:
+        Exception: If there is an error that should be handled by MCP server
     """
-    return {
-        "isError": is_error,
-        "content": [EmbeddedResource(
-            type="resource",
-            resource=TextResourceContents(
-                uri=f"mcp://{resource_type}",
-                text=json.dumps(data)
-            )
-        )]
-    }
+    return [EmbeddedResource(
+        type="resource",
+        resource=TextResourceContents(
+            uri=f"mcp://{resource_type}",
+            text=json.dumps(data)
+        )
+    )]

@@ -1,6 +1,6 @@
 import logging
 from .session import SessionManager
-from .tools.handlers.ai_agent.job_store import job_store
+from ..mcp_server.handlers.ai_agent.job_store import job_store
 
 
 logger = logging.getLogger("browser_daemon")

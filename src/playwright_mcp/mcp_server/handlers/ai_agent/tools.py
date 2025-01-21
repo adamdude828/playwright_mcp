@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.tools import Tool
 from dotenv import load_dotenv
-from .....utils.logging import setup_logging
-from ....core.session import session_manager
+from ....utils.logging import setup_logging
+from ....browser_daemon.core.session import session_manager
 
 # Set up logging properly using project's utility
 logger = setup_logging("playwright_mcp.browser_daemon.tools.ai_agent")

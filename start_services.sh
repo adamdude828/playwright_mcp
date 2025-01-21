@@ -1,23 +1,20 @@
 #!/bin/bash
 
-# Create logs directory if it doesn't exist
-mkdir -p logs
+# Start MCP server
+echo "Starting MCP server..."
+mcp-server &
+MCP_SERVER_PID=$!
 
-# Start the browser manager in the background
-poetry run python -m src.playwright_mcp.browser_manager &
-BROWSER_PID=$!
+# Wait for server to start
+sleep 2
 
-# Wait a moment for the socket to be created
-sleep 1
+# Start browser daemon
+echo "Starting browser daemon..."
+mcp-cli --server playwright call-tool --tool start-daemon --tool-args '{}'
 
-echo "Browser manager started with PID: $BROWSER_PID"
-echo "Logs are being written to: logs/browser_manager.log"
-echo "You can monitor logs with: tail -f logs/browser_manager.log"
-echo
-echo "You can now use MCP commands to control browsers"
-echo
-echo "Example:"
-echo "mcp-cli --server playwright call-tool --tool launch-browser --tool-args '{\"browser_type\": \"chromium\", \"headless\": false}'"
-echo
-echo "To stop the browser manager:"
-echo "kill $BROWSER_PID" 
+# Navigate to example.com in non-headless mode
+echo "mcp-cli --server playwright call-tool --tool navigate --tool-args '{\"url\": \"https://example.com\", \"wait_until\": \"networkidle\", \"headless\": false}'"
+
+# Keep script running
+echo "Services started. Press Ctrl+C to stop..."
+wait $MCP_SERVER_PID 

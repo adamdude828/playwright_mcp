@@ -4,7 +4,7 @@ from mcp.server.models import InitializationOptions
 import mcp.types as types
 from mcp.server.stdio import stdio_server
 from ..browser_daemon.tools.definitions import get_tool_definitions
-from ..browser_daemon.tools.handlers import TOOL_HANDLERS
+from .handlers import TOOL_HANDLERS
 from ..utils.logging import setup_logging
 from ..browser_daemon.core.session import session_manager
 import asyncio
@@ -41,6 +41,20 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {}
+        }
+    ),
+    Tool(
+        name="get-ai-result",
+        description="Get the result of an AI agent job",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "job_id": {
+                    "type": "string",
+                    "description": "ID of the job to get result for"
+                }
+            },
+            "required": ["job_id"]
         }
     ),
     Tool(
@@ -209,24 +223,9 @@ async def handle_call_tool(
         logger.error(f"Unknown tool: {name}")
         return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
-    try:
-        result = await TOOL_HANDLERS[name](arguments or {})
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Tool call successful - name: {name}, result: {result}")
-            
-        # If result is already a list of MCP content types, return it directly
-        if isinstance(result, list) and all(is_mcp_content(item) for item in result):
-            return result
-            
-        # If it's a string or other type, wrap it in TextContent
-        if not isinstance(result, list):
-            return [types.TextContent(type="text", text=str(result))]
-            
-        # Convert list items to TextContent if needed
-        return [types.TextContent(type="text", text=str(item)) for item in result]
-    except Exception as e:
-        logger.error(f"Tool call failed - name: {name}, error: {e}")
-        return [types.TextContent(type="text", text=str(e))]
+    result = await TOOL_HANDLERS[name](arguments or {})
+    logger.debug(f"result before return: {result}")
+    return result
 
 
 async def start_server():

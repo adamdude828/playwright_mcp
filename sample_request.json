@@ -3,10 +3,11 @@
     "id": 1,
     "method": "tool/call",
     "params": {
-        "name": "launch-browser",
+        "name": "navigate",
         "arguments": {
-            "browser_type": "chromium",
-            "headless": true
+            "url": "https://example.com",
+            "wait_until": "networkidle",
+            "headless": false
         }
     }
 } 
